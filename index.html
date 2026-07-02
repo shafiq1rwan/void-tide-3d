@@ -732,8 +732,8 @@ let lampLight, beamSpot, lampMat;
   lampLight.position.y = y + 0.7; lighthouse.add(lampLight);
 
   beamGroup.position.y = y + 0.6;
-  const beamGeo = new THREE.ConeGeometry(3.4, 42, 12, 1, true);
-  beamGeo.rotateX(Math.PI/2); beamGeo.translate(0, 0, 21+1);
+  const beamGeo = new THREE.ConeGeometry(4.5, 42, 12, 1, true);
+  beamGeo.rotateX(-Math.PI/2); beamGeo.translate(0, 0, 21+1);
   const beamMat = new THREE.MeshBasicMaterial({ color:0xffe9a8, transparent:true, opacity:0.13,
     blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, fog:false });
   beamGroup.add(new THREE.Mesh(beamGeo, beamMat));
