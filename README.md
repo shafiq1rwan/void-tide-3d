@@ -46,6 +46,8 @@ Enemies get tougher each tide. Your shield regenerates out of combat; your healt
 
 The beacon fights back: voidspawn caught in its sweeping light are seared and keep burning for a few seconds. Swimmers leave glowing bioluminescent wakes — watch the water to see the tide coming. Distant lightning builds with the later tides.
 
+Chain kills within two seconds to multiply their score, up to **x5**. When something hurts you, a red arc around the crosshair points back at it — trust the arc, turn, and fire. The music itself is a warning: the war-drum swells as more creatures reach the sand.
+
 ## Running It
 
 No build step, no server, no internet required — three.js is inlined into the file, so it works fully offline and behind corporate firewalls that block CDNs.

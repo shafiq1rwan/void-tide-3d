@@ -92,6 +92,23 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
   #hitmark.show{ animation:hm .18s ease-out; }
   @keyframes hm{ 0%{opacity:1; transform:scale(1.35);} 100%{opacity:0; transform:scale(.9);} }
 
+  /* damage direction arcs around the crosshair */
+  #dmgdirs{ position:absolute; left:50%; top:50%; }
+  .ddir{ position:absolute; left:-80px; top:-80px; width:160px; height:160px; border-radius:50%;
+    border:4px solid transparent; border-top-color:rgba(255,59,78,.9); opacity:0;
+    filter:drop-shadow(0 0 6px rgba(255,59,78,.7)); }
+
+  /* kill combo popup */
+  #combo{ position:absolute; left:50%; top:calc(50% + 46px); transform:translateX(-50%);
+    font-size:16px; letter-spacing:3px; color:var(--amber);
+    text-shadow:0 0 10px rgba(255,216,138,.85); opacity:0; white-space:nowrap; }
+  #combo.pop{ animation:combopop .9s ease-out; }
+  @keyframes combopop{
+    0%{ opacity:1; transform:translateX(-50%) scale(1.4); }
+    25%{ transform:translateX(-50%) scale(1); }
+    70%{ opacity:1; }
+    100%{ opacity:0; transform:translateX(-50%) scale(1); } }
+
   /* damage overlays */
   #dmgVig{ position:fixed; inset:0; pointer-events:none; z-index:9; opacity:0;
     background:radial-gradient(ellipse at center, transparent 55%, rgba(200,20,40,.55) 100%); transition:opacity .08s; }
@@ -245,6 +262,8 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
   </div>
   <div id="xh"><div class="xt h t1"></div><div class="xt h t2"></div><div class="xt v t3"></div><div class="xt v t4"></div><div id="xdot"></div></div>
   <div id="hitmark"><div class="m m1"></div><div class="m m2"></div><div class="m m3"></div><div class="m m4"></div></div>
+  <div id="dmgdirs"></div>
+  <div id="combo"></div>
   <button id="btnPause">II</button>
 </div>
 
@@ -364,6 +383,7 @@ let shakeT = 0, shakeAmp = 0;
 
 // ---------------- audio (all procedural) ----------------
 let AC = null, master = null, noiseBuf = null;
+let tensionGain = null, pulseGain = null, musicT = 0;
 function initAudio(){
   if (AC) return;
   try{
@@ -386,7 +406,36 @@ function initAudio(){
     const dl = AC.createBiquadFilter(); dl.type='lowpass'; dl.frequency.value=210;
     const dg = AC.createGain(); dg.gain.value=0.028;
     o1.connect(dl); o2.connect(dl); dl.connect(dg); dg.connect(master); o1.start(); o2.start();
+    // tension layer: higher detuned saws, faded in as creatures come ashore
+    tensionGain = AC.createGain(); tensionGain.gain.value = 0; tensionGain.connect(master);
+    const t1 = AC.createOscillator(), t2 = AC.createOscillator();
+    t1.type='sawtooth'; t2.type='sawtooth'; t1.frequency.value = 110.4; t2.frequency.value = 109.3;
+    const tf = AC.createBiquadFilter(); tf.type='bandpass'; tf.frequency.value = 420; tf.Q.value = 1.1;
+    t1.connect(tf); t2.connect(tf); tf.connect(tensionGain); t1.start(); t2.start();
+    // pulse layer: slow war-drum swell
+    pulseGain = AC.createGain(); pulseGain.gain.value = 0; pulseGain.connect(master);
+    const po = AC.createOscillator(); po.type='sine'; po.frequency.value = 55;
+    const pg = AC.createGain(); pg.gain.value = 0.5;
+    const plfo = AC.createOscillator(); plfo.type='sine'; plfo.frequency.value = 1.15;
+    const plg = AC.createGain(); plg.gain.value = 0.5;
+    plfo.connect(plg); plg.connect(pg.gain);
+    po.connect(pg); pg.connect(pulseGain); po.start(); plfo.start();
   }catch(e){ /* audio unavailable */ }
+}
+function updateMusic(dt){
+  if (!tensionGain) return;
+  musicT -= dt;
+  if (musicT > 0) return;
+  musicT = 0.5;
+  let tension = 0, pulse = 0;
+  if (G.mode === 'active' && !G.paused){
+    const ashore = enemies.reduce((n,e)=> n + (e.state === 'crawl' ? 1 : 0), 0);
+    const k = clamp(ashore/8, 0, 1);
+    tension = 0.008 + 0.034*k + 0.014*(G.tide/10);
+    pulse = 0.06*k;
+  }
+  tensionGain.gain.setTargetAtTime(tension, AC.currentTime, 0.7);
+  pulseGain.gain.setTargetAtTime(pulse, AC.currentTime, 0.7);
 }
 function noiseHit(dur, freq, vol, type='bandpass', q=1){
   if (!AC) return;
@@ -849,9 +898,25 @@ function damageEnemy(e, dmg, point){
   if (e.hp <= 0) killEnemy(e);
   else { sfx.hit(); hitmark(false); }
 }
+let comboN = 0, comboT = 0;
 function killEnemy(e, byPlayer=true){
   e.dead = true;
-  G.score += e.pts; G.kills++;
+  G.kills++;
+  if (byPlayer){
+    // chained kills within 2s multiply score, up to x5
+    comboN = comboT > 0 ? comboN + 1 : 1;
+    comboT = 2;
+    const mult = Math.min(comboN, 5);
+    G.score += e.pts * mult;
+    if (mult > 1){
+      const cb = $('combo');
+      cb.textContent = 'x' + mult + '  +' + (e.pts*mult);
+      cb.classList.remove('pop'); void cb.offsetWidth; cb.classList.add('pop');
+      tone(280 + mult*140, 280 + mult*140, 0.09, 0.1, 'square');
+    }
+  } else {
+    G.score += e.pts; // the beacon's kill — no combo
+  }
   burst(e.group.position.clone().add(new THREE.Vector3(0,0.6*e.scale,0)), 14, 0x2affd8, 0.16, 5, 0.6);
   burst(e.group.position.clone().add(new THREE.Vector3(0,0.6*e.scale,0)), 8, 0x123b42, 0.2, 4, 0.7);
   // drops
@@ -926,7 +991,7 @@ function updateEnemies(dt, t){
         if (e.attackT <= 0){
           e.attackT = e.cool;
           g.position.addScaledVector(dir, 0.35); // lunge
-          if (targetPlayer) damagePlayer(e.dmg);
+          if (targetPlayer) damagePlayer(e.dmg, g.position);
           else damageBeacon(e.beaconDmg, g.position);
         }
       }
@@ -987,7 +1052,7 @@ function updateSpits(dt){
     if (s.trail <= 0){ s.trail = 0.05; burst(s.m.position.clone(), 1, 0x8a4ae0, 0.05, 0.4, 0.25); }
     const p = s.m.position;
     let hit = false;
-    if (p.distanceTo(player.position.clone().add(new THREE.Vector3(0,1,0))) < 1.1){ damagePlayer(9); hit = true; }
+    if (p.distanceTo(player.position.clone().add(new THREE.Vector3(0,1,0))) < 1.1){ damagePlayer(9, p); hit = true; }
     else if (Math.hypot(p.x, p.z) < 2.4 && p.y < BEACON_POS.y + 8){ damageBeacon(3, p); hit = true; }
     else if (p.y < terrainHeight(p.x,p.z) || p.y < waterY(p.x,p.z,0)-0.5) hit = true;
     if (hit || s.life <= 0){
@@ -1153,8 +1218,31 @@ function hitmark(kill){
 function shake(t, amp){ shakeT = Math.max(shakeT, t); shakeAmp = Math.max(shakeAmp, amp); }
 
 // ---------------- damage: player & beacon ----------------
-function damagePlayer(d){
+// red arc at the crosshair pointing toward whatever hurt the keeper
+const ddirPool = [];
+{
+  const wrap = $('dmgdirs');
+  for (let i=0;i<4;i++){
+    const d = document.createElement('div');
+    d.className = 'ddir';
+    wrap.appendChild(d); ddirPool.push(d);
+  }
+}
+let ddirIdx = 0;
+function showDamageDir(from){
+  const az = Math.atan2(from.x - player.position.x, from.z - player.position.z);
+  const rot = -(az - P.yaw)*180/Math.PI;
+  const el = ddirPool[ddirIdx++ % ddirPool.length];
+  el.style.transition = 'none';
+  el.style.transform = 'rotate(' + rot.toFixed(1) + 'deg)';
+  el.style.opacity = '1';
+  void el.offsetWidth;
+  el.style.transition = 'opacity .9s ease .25s';
+  el.style.opacity = '0';
+}
+function damagePlayer(d, from){
   if (G.mode === 'over' || G.mode === 'dawn') return;
+  if (from) showDamageDir(from);
   P.shieldDelay = 4;
   if (P.shield > 0){
     const absorbed = Math.min(P.shield, d);
@@ -1520,6 +1608,8 @@ function updatePlayer(dt){
   P.shieldDelay -= dt;
   if (P.shieldDelay <= 0 && P.shield < P.shieldMax)
     P.shield = Math.min(P.shieldMax, P.shield + 16*dt);
+
+  comboT -= dt; // kill-chain window
 }
 let bobT = 0, adsK = 0, recoilK = 0, swayX = 0, swayY = 0, lastYaw = 0, lastPitch = 0;
 function updateCamera(dt){
@@ -1666,7 +1756,9 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 
 const clock = new THREE.Clock();
 window.__vt.ready = true;
-window.__vt.debug = { G, P, U, fire: v => { P.firing = v; }, offer: offerUpgrades };
+window.__vt.debug = { G, P, U, fire: v => { P.firing = v; }, offer: offerUpgrades,
+  hurt: ang => damagePlayer(8, new THREE.Vector3(
+    player.position.x + Math.sin(P.yaw + ang)*6, 1, player.position.z + Math.cos(P.yaw + ang)*6)) };
 let perfT = 0;
 function frame(){
   requestAnimationFrame(frame);
@@ -1677,6 +1769,7 @@ function frame(){
   updateWater(t);
   updateClouds(dt);
   updateLightning(dt);
+  updateMusic(dt);
   updateBeacon(dt, t);
   updateAnnounce(dt);
 
