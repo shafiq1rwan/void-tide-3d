@@ -384,6 +384,7 @@ const sfx = {
   spit(){ tone(500, 200, 0.15, 0.08, 'sine'); },
   pickup(){ tone(600, 1100, 0.12, 0.12, 'square'); },
   tide(){ tone(70, 45, 1.4, 0.22, 'sawtooth'); noiseHit(1.2, 260, 0.14, 'lowpass'); },
+  thunder(){ noiseHit(1.7, 75, 0.38, 'lowpass', 0.6); noiseHit(0.9, 48, 0.28, 'lowpass'); },
   win(){ [440,554,659,880].forEach((f,i)=> setTimeout(()=>tone(f,f,0.5,0.12,'triangle'), i*180)); },
 };
 
@@ -402,15 +403,15 @@ renderer.shadowMap.enabled = !isTouch;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
-const NIGHT_SKY = new THREE.Color(0x05070f), NIGHT_FOG = new THREE.Color(0x060b14);
+const NIGHT_SKY = new THREE.Color(0x0a1122), NIGHT_FOG = new THREE.Color(0x0b1424);
 const DAWN_SKY = new THREE.Color(0xd88a5a), DAWN_FOG = new THREE.Color(0xc98a6a);
 scene.background = NIGHT_SKY.clone();
 scene.fog = new THREE.FogExp2(NIGHT_FOG.clone(), 0.0125);
 
 const camera = new THREE.PerspectiveCamera(72, innerWidth/innerHeight, 0.06, 500);
 
-const ambient = new THREE.AmbientLight(0x33415c, 0.85); scene.add(ambient);
-const moonLight = new THREE.DirectionalLight(0x6f86b8, 0.75);
+const ambient = new THREE.AmbientLight(0x3a4a6a, 1.05); scene.add(ambient);
+const moonLight = new THREE.DirectionalLight(0x7d94c8, 1.0);
 moonLight.position.set(-60, 80, -70);
 if (!isTouch){
   moonLight.castShadow = true;
@@ -419,7 +420,7 @@ if (!isTouch){
   c.left=-34; c.right=34; c.top=34; c.bottom=-34; c.near=10; c.far=220;
 }
 scene.add(moonLight);
-const hemi = new THREE.HemisphereLight(0x24334d, 0x0a1220, 0.5); scene.add(hemi);
+const hemi = new THREE.HemisphereLight(0x2c3f60, 0x0e1628, 0.72); scene.add(hemi);
 
 // stars + moon
 {
@@ -433,12 +434,90 @@ const hemi = new THREE.HemisphereLight(0x24334d, 0x0a1220, 0.5); scene.add(hemi)
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(pos,3));
   scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color:0xaebfdd, size:1.6, sizeAttenuation:false, fog:false })));
-  const moon = new THREE.Mesh(new THREE.CircleGeometry(11, 24),
-    new THREE.MeshBasicMaterial({ color:0xd8e2f2, fog:false }));
-  moon.position.set(-150, 105, -190); moon.lookAt(0,0,0); scene.add(moon);
-  const halo = new THREE.Mesh(new THREE.CircleGeometry(20, 24),
-    new THREE.MeshBasicMaterial({ color:0x8fa5cc, transparent:true, opacity:0.14, fog:false, blending:THREE.AdditiveBlending, depthWrite:false }));
-  halo.position.copy(moon.position).multiplyScalar(1.001); halo.lookAt(0,0,0); scene.add(halo);
+  // big cratered moon, drawn once to a canvas
+  const moonTex = (()=>{
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const x = c.getContext('2d');
+    const g = x.createRadialGradient(58,54,18, 64,64,62);
+    g.addColorStop(0,'#f2f5ff'); g.addColorStop(0.7,'#d4dff2'); g.addColorStop(1,'#b6c4e0');
+    x.fillStyle = g; x.beginPath(); x.arc(64,64,62,0,7); x.fill();
+    x.fillStyle = 'rgba(148,164,200,0.5)';
+    for (const [cx,cy,r] of [[44,52,10],[82,40,6],[72,80,12],[48,88,5],[92,68,4],[60,34,5]]){
+      x.beginPath(); x.arc(cx,cy,r,0,7); x.fill();
+      x.fillStyle = 'rgba(148,164,200,0.35)';
+    }
+    return new THREE.CanvasTexture(c);
+  })();
+  const moon = new THREE.Mesh(new THREE.PlaneGeometry(34, 34),
+    new THREE.MeshBasicMaterial({ map:moonTex, transparent:true, fog:false, depthWrite:false }));
+  moon.position.set(-135, 118, -170); moon.lookAt(0,0,0); scene.add(moon);
+  const halo = new THREE.Mesh(new THREE.CircleGeometry(30, 24),
+    new THREE.MeshBasicMaterial({ color:0x8fa5cc, transparent:true, opacity:0.16, fog:false,
+      blending:THREE.AdditiveBlending, depthWrite:false }));
+  halo.position.copy(moon.position).multiplyScalar(1.002); halo.lookAt(0,0,0); scene.add(halo);
+}
+
+// ---------------- clouds ----------------
+const clouds = [];
+const cloudMat = new THREE.MeshLambertMaterial({ color:0x9db1d6, emissive:0x1a2540,
+  flatShading:true, transparent:true, opacity:0.9, fog:false });
+{
+  for (let i=0;i<10;i++){
+    const g = new THREE.Group();
+    const n = irand(3,5);
+    for (let j=0;j<n;j++){
+      const puff = new THREE.Mesh(new THREE.IcosahedronGeometry(rand(4.5,8.5), 0), cloudMat);
+      puff.position.set(rand(-10,10), rand(-1.5,1.5), rand(-4.5,4.5));
+      puff.scale.y = rand(0.3,0.45);
+      puff.rotation.set(rand(0,TAU), rand(0,TAU), 0);
+      g.add(puff);
+    }
+    const a = rand(0,TAU), r = rand(60,150);
+    g.position.set(Math.cos(a)*r, rand(45,80), Math.sin(a)*r);
+    scene.add(g);
+    clouds.push({ g, speed: rand(0.7,1.8) });
+  }
+}
+function updateClouds(dt){
+  for (const c of clouds){
+    c.g.position.x += c.speed*dt;
+    if (c.g.position.x > 175) c.g.position.x = -175;
+  }
+}
+
+// ---------------- distant lightning ----------------
+const FLASH_SKY = new THREE.Color(0x3d5480);
+const lightningFlash = new THREE.Mesh(new THREE.PlaneGeometry(150, 60),
+  new THREE.MeshBasicMaterial({ color:0xcfe2ff, transparent:true, opacity:0, fog:false,
+    blending:THREE.AdditiveBlending, depthWrite:false }));
+lightningFlash.visible = false; scene.add(lightningFlash);
+const lightning = { next: rand(8,16), active: 0, full: 1 };
+function updateLightning(dt){
+  if (G.dawnT > 0){ lightningFlash.visible = false; return; } // dawn owns the sky
+  if (lightning.active > 0){
+    lightning.active -= dt;
+    const env = Math.max(0, lightning.active/lightning.full);
+    const flick = env * (Math.random() < 0.55 ? 1 : 0.2);
+    lightningFlash.material.opacity = flick*0.6;
+    hemi.intensity = 0.72 + flick*1.4;
+    scene.background.copy(NIGHT_SKY).lerp(FLASH_SKY, flick*0.4);
+    if (lightning.active <= 0){
+      lightningFlash.visible = false;
+      hemi.intensity = 0.72;
+      scene.background.copy(NIGHT_SKY);
+    }
+  } else {
+    lightning.next -= dt;
+    if (lightning.next <= 0){
+      lightning.next = rand(14, 28) - Math.min(G.tide, 8); // storms build as tides rise
+      lightning.full = lightning.active = rand(0.25, 0.5);
+      const a = rand(0, TAU);
+      lightningFlash.position.set(Math.sin(a)*250, 40, Math.cos(a)*250);
+      lightningFlash.lookAt(0, 30, 0);
+      lightningFlash.visible = true;
+      setTimeout(()=> sfx.thunder(), rand(600, 1900)); // thunder arrives late from far away
+    }
+  }
 }
 
 // ---------------- terrain ----------------
@@ -604,10 +683,13 @@ const glowTex = (()=>{
 })();
 
 const viewmodel = new THREE.Group();
-let muzzle, muzzleFlash, gunLight, armsGrp;
+let muzzle, muzzleFlash, gunLight, armsGrp, magMesh;
 {
   const dark = lambert(0x2a2f38), metal = lambert(0x4a525e), wood = lambert(0x54402c),
         coat = lambert(0xd9a337), skin = lambert(0xc79a6b);
+  // self-illumination so the weapon reads clearly on dark nights and small screens
+  dark.emissive.setHex(0x14181f); metal.emissive.setHex(0x161b22); wood.emissive.setHex(0x1c150e);
+  coat.emissive.setHex(0x2e2208); skin.emissive.setHex(0x241811);
   const rifle = new THREE.Group();
   const recv = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.09, 0.36), dark); rifle.add(recv);
   const shroud = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.055, 0.26), metal);
@@ -618,8 +700,8 @@ let muzzle, muzzleFlash, gunLight, armsGrp;
   stock.position.set(0, -0.025, 0.28); rifle.add(stock);
   const grip = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.13, 0.06), wood);
   grip.position.set(0, -0.1, 0.1); grip.rotation.x = 0.35; rifle.add(grip);
-  const mag = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.16, 0.07), metal);
-  mag.position.set(0, -0.12, -0.04); mag.rotation.x = -0.2; rifle.add(mag);
+  magMesh = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.16, 0.07), metal);
+  magMesh.position.set(0, -0.12, -0.04); magMesh.rotation.x = -0.2; rifle.add(magMesh);
   const sightF = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.045, 0.012), dark);
   sightF.position.set(0, 0.075, -0.38); rifle.add(sightF);
   const sightR = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.03, 0.02), dark);
@@ -643,7 +725,7 @@ let muzzle, muzzleFlash, gunLight, armsGrp;
   handL.position.set(0, -0.04, -0.26); armsGrp.add(handL);
   rifle.add(armsGrp);
   viewmodel.add(rifle);
-  viewmodel.scale.setScalar(0.4);
+  viewmodel.scale.setScalar(0.5);
   viewmodel.visible = false;
   camera.add(viewmodel);
 }
@@ -714,6 +796,7 @@ function spawnEnemy(type){
     group: b.group, legs: b.legs, mats: b.mats,
     state:'swim', attackT: rand(0,0.5), aggro: 0, flashT: 0,
     phase: rand(0,TAU), spitT: rand(1,2), dead: false,
+    wakeT: rand(0,0.2), ignite: 0, burnT: 0,
   };
   b.group.traverse(o=>{ o.userData.enemy = e; });
   enemyGroup.add(b.group);
@@ -730,7 +813,7 @@ function damageEnemy(e, dmg, point){
   if (e.hp <= 0) killEnemy(e);
   else { sfx.hit(); hitmark(false); }
 }
-function killEnemy(e){
+function killEnemy(e, byPlayer=true){
   e.dead = true;
   G.score += e.pts; G.kills++;
   burst(e.group.position.clone().add(new THREE.Vector3(0,0.6*e.scale,0)), 14, 0x2affd8, 0.16, 5, 0.6);
@@ -742,7 +825,7 @@ function killEnemy(e){
   enemyGroup.remove(e.group);
   enemies.splice(enemies.indexOf(e), 1);
   sfx.kill();
-  hitmark(true);
+  if (byPlayer) hitmark(true);
 }
 function updateEnemies(dt, t){
   const pp = player.position;
@@ -761,6 +844,15 @@ function updateEnemies(dt, t){
       g.position.y = waterY(g.position.x, g.position.z, t) - 0.25 + Math.sin(t*3 + e.phase)*0.08;
       g.rotation.y = Math.atan2(dir.x, dir.z);
       g.rotation.x = 0.15*Math.sin(t*4 + e.phase);
+      // bioluminescent wake trailing on the surface
+      e.wakeT -= dt;
+      if (e.wakeT <= 0){
+        e.wakeT = 0.18;
+        impactFlash(new THREE.Vector3(
+          g.position.x - dir.x*0.8*e.scale,
+          waterY(g.position.x, g.position.z, t) + 0.06,
+          g.position.z - dir.z*0.8*e.scale), 0x1fd8c8, rand(0.35,0.6)*e.scale, 1.1, 0.45);
+      }
       if (groundH > -0.35){
         e.state = 'crawl';
         burst(g.position.clone(), 8, 0x9fc8e8, 0.12, 3, 0.4);
@@ -804,6 +896,34 @@ function updateEnemies(dt, t){
       }
       g.position.y = lerp(g.position.y, Math.max(groundH, -0.3) + 0.15*e.scale, 1-Math.exp(-10*dt));
       g.rotation.x = 0;
+    }
+  }
+}
+
+// the beacon's sweeping light sears voidspawn caught in it, leaving them burning briefly
+function updateBeamDamage(dt){
+  if (BEACON.hp <= 0) return;
+  const th = beamGroup.rotation.y;
+  for (let i=enemies.length-1;i>=0;i--){
+    const e = enemies[i];
+    const p = e.group.position;
+    const r = Math.hypot(p.x, p.z);
+    if (r > 5 && r < 46){
+      const az = Math.atan2(p.x, p.z);
+      let n = (az - th) % TAU; if (n < 0) n += TAU;
+      let diff = Math.min(n, TAU - n);
+      diff = Math.min(diff, Math.PI - diff); // two opposite beams
+      if (diff < 0.11) e.ignite = 1.5;
+    }
+    if (e.ignite > 0){
+      e.ignite -= dt;
+      e.hp -= 4*dt * (e.type === 'brute' ? 0.5 : 1);
+      e.burnT -= dt;
+      if (e.burnT <= 0){
+        e.burnT = 0.22;
+        burst(p.clone().add(new THREE.Vector3(0, 0.9*e.scale, 0)), 1, 0xffd88a, 0.045, 1.6, 0.7, 1.5);
+      }
+      if (e.hp <= 0) killEnemy(e, false);
     }
   }
 }
@@ -894,22 +1014,22 @@ function updateParticles(dt){
     p.m.material.opacity = clamp(p.life/p.full*1.6, 0, 1);
   }
 }
-// short-lived additive glow sprites at bullet impact points
+// additive glow sprites: bullet impacts (short) and water wakes (long, dim)
 const flashes = [];
-function impactFlash(pos, color, size){
-  if (flashes.length > 40) return;
+function impactFlash(pos, color, size, life=0.12, o=1){
+  if (flashes.length > 90) return;
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color,
     transparent:true, blending:THREE.AdditiveBlending, depthWrite:false }));
   s.position.copy(pos); s.scale.setScalar(size);
   scene.add(s);
-  flashes.push({ s, life: 0.12, full: 0.12, grow: size*3 });
+  flashes.push({ s, life, full: life, o, grow: size*3/Math.max(life/0.12,1) });
 }
 function updateFlashes(dt){
   for (let i=flashes.length-1;i>=0;i--){
     const f = flashes[i];
     f.life -= dt;
     if (f.life <= 0){ scene.remove(f.s); f.s.material.dispose(); flashes.splice(i,1); continue; }
-    f.s.material.opacity = f.life/f.full;
+    f.s.material.opacity = f.life/f.full * f.o;
     f.s.scale.addScalar(f.grow*dt);
   }
 }
@@ -1134,6 +1254,7 @@ function updateDawn(dt){
   moonLight.intensity = lerp(0.75, 1.4, k);
   moonLight.color.lerp(new THREE.Color(0xffc890), k*0.05);
   water.material.color.lerp(new THREE.Color(0x2a5578), k*0.02);
+  cloudMat.emissive.copy(new THREE.Color(0x1a2540)).lerp(new THREE.Color(0xb87a4a), k); // sunrise-lit clouds
   if (G.dawnT > 6.5 && G.mode === 'dawn'){
     G.mode = 'over';
     if (document.pointerLockElement) document.exitPointerLock();
@@ -1347,11 +1468,17 @@ function updateCamera(dt){
   swayX = clamp(lerp(swayX, -dYaw*5, 1 - Math.exp(-10*dt)), -0.035, 0.035);
   swayY = clamp(lerp(swayY,  dPitch*5, 1 - Math.exp(-10*dt)), -0.035, 0.035);
   const bx = Math.cos(bobT*0.5)*bobAmp*0.55, by = Math.abs(Math.sin(bobT))*bobAmp*0.45;
+  // reload: rifle dips + rolls inward, magazine drops out and snaps back
+  const rp = P.reloading > 0 ? 1 - P.reloading/1.5 : 0;   // reload progress 0..1
+  const rk = rp > 0 ? Math.sin(rp*Math.PI) : 0;            // smooth dip envelope
+  magMesh.position.y = -0.12 - (rp > 0 ? 0.15*Math.sin(clamp(rp*1.5, 0, 1)*Math.PI) : 0);
   viewmodel.position.set(
-    lerp(0.18, 0, adsK) + (swayX + bx)*(1-adsK*0.8),
-    lerp(-0.17, -0.029, adsK) + (swayY - by)*(1-adsK*0.8),
-    lerp(-0.38, -0.42, adsK) + recoilK*0.06);
-  viewmodel.rotation.set(recoilK*0.09 + Math.sin(perfT*1.5)*0.004*(1-adsK), swayX*0.5, 0);
+    lerp(0.17, 0, adsK) + (swayX + bx)*(1-adsK*0.8),
+    lerp(-0.175, -0.036, adsK) + (swayY - by)*(1-adsK*0.8) - 0.04*rk,
+    lerp(-0.36, -0.4, adsK) + recoilK*0.06);
+  viewmodel.rotation.set(
+    recoilK*0.09 + Math.sin(perfT*1.5)*0.004*(1-adsK) - 0.22*rk,
+    swayX*0.5, 0.28*rk);
   armsGrp.position.set(0, -0.16*adsK, 0.12*adsK); // arms tuck out of view while aiming
 }
 
@@ -1470,6 +1597,8 @@ function frame(){
   const t = perfT;
 
   updateWater(t);
+  updateClouds(dt);
+  updateLightning(dt);
   updateBeacon(dt, t);
   updateAnnounce(dt);
 
@@ -1477,6 +1606,7 @@ function frame(){
   if (running){
     updatePlayer(dt);
     updateEnemies(dt, t);
+    updateBeamDamage(dt);
     updateSpits(dt);
     updatePickups(dt, t);
     updateTides(dt);

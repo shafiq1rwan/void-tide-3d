@@ -42,6 +42,8 @@ Watch the minimap: white flashing dots are incoming voidspawn, and glowing eyes 
 
 Enemies get tougher each tide. Your shield regenerates out of combat; your health only recovers from pickups.
 
+The beacon fights back: voidspawn caught in its sweeping light are seared and keep burning for a few seconds. Swimmers leave glowing bioluminescent wakes — watch the water to see the tide coming. Distant lightning builds with the later tides.
+
 ## Running It
 
 No build step, no server, no internet required — three.js is inlined into the file, so it works fully offline and behind corporate firewalls that block CDNs.
