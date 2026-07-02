@@ -10,6 +10,8 @@ A first-person shooter built with [three.js](https://threejs.org) in a **single 
 
 Defend the lighthouse beacon at the center of the island. Creatures swim in from the dark sea each tide and will attack the beacon — or you, if you get close or shoot them. Clear all 10 tides to win. Between tides your ammo reserve is restocked and the beacon slowly repairs.
 
+After each repelled tide, choose one of three **keeper upgrades** (press `1`/`2`/`3` or tap): mend the beacon, extend your magazine, reload faster, boost shields or health, sharpen your aim, make the beam burn hotter, or scavenge more drops. The next tide holds until you choose — every run builds differently.
+
 Watch the minimap: white flashing dots are incoming voidspawn, and glowing eyes in the water mark swimmers closing in. Enemies sometimes drop glowing pickups — cyan for ammo, red for health.
 
 ### Controls
