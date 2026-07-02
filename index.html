@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#05070d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>VOID TIDE</title>
 <script>
 // boot diagnostics: capture any load/runtime error so a broken environment is visible, not silent
@@ -19,7 +25,7 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
     --cyan:#7df9ff; --red:#ff3b4e; --amber:#ffd88a; --dim:#8aa3b8;
   }
   *{ margin:0; padding:0; box-sizing:border-box; }
-  html,body{ width:100%; height:100%; overflow:hidden; background:#05070d;
+  html,body{ width:100%; height:100%; height:100dvh; overflow:hidden; background:#05070d;
     font-family:'Consolas','Courier New',monospace; color:var(--cyan);
     -webkit-user-select:none; user-select:none; touch-action:none; }
   canvas#game{ position:fixed; inset:0; display:block; }
@@ -103,7 +109,10 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
 
   /* screens */
   .screen{ position:fixed; inset:0; z-index:20; display:flex; flex-direction:column; align-items:center;
-    justify-content:center; text-align:center; background:rgba(3,6,12,.82); backdrop-filter:blur(3px); padding:20px; }
+    text-align:center; background:rgba(3,6,12,.82); backdrop-filter:blur(3px); padding:16px;
+    overflow-y:auto; touch-action:pan-y; }
+  /* flexible spacers center the content but collapse when it overflows, keeping it scrollable */
+  .screen::before, .screen::after{ content:''; flex:1 1 0; min-height:8px; }
   .screen.hidden{ display:none; }
   .title{ font-size:clamp(38px,9vw,84px); letter-spacing:16px; color:#eaf7ff;
     text-shadow:0 0 16px rgba(125,249,255,.9), 0 0 60px rgba(125,249,255,.45); margin-bottom:6px; }
@@ -119,6 +128,34 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
   .endstat{ font-size:clamp(13px,3vw,17px); letter-spacing:3px; color:var(--amber); margin:16px 0 26px; line-height:2; }
   #goTitle.red{ color:#ffb3bb; text-shadow:0 0 16px rgba(255,59,78,.9),0 0 60px rgba(255,59,78,.5); }
   #vicTitle{ color:#ffe9c4; text-shadow:0 0 16px rgba(255,216,138,.9),0 0 60px rgba(255,180,80,.5); }
+  /* compact HUD for landscape phones */
+  @media (max-height:480px){
+    #vitals{ width:min(190px,28vw); }
+    .barwrap{ height:20px; margin-bottom:5px; }
+    .barwrap.shield{ height:12px; }
+    .barlabel{ font-size:10px; } .bartag{ font-size:8px; letter-spacing:1px; }
+    #mapwrap{ width:104px; }
+    #maplegend{ font-size:8px; }
+    #weapons{ padding:5px 10px; }
+    #ammoLine{ font-size:19px; }
+    #statLines{ font-size:10px; margin-top:2px; line-height:1.45; }
+    #reloadTag{ font-size:9px; height:11px; }
+    #beaconBox .t{ font-size:8px; letter-spacing:2px; margin-bottom:3px; }
+    #beaconBar{ height:8px; }
+    #btnFire{ width:70px; height:70px; font-size:13px; bottom:calc(54px + env(safe-area-inset-bottom)); }
+    #btnReload{ width:48px; height:48px; font-size:10px;
+      right:calc(112px + env(safe-area-inset-right)); bottom:calc(92px + env(safe-area-inset-bottom)); }
+    body.touch #weapons{ right:calc(104px + env(safe-area-inset-right)); bottom:calc(10px + env(safe-area-inset-bottom)); }
+  }
+  /* compact layout for short screens (landscape phones) */
+  @media (max-height:560px){
+    .title{ font-size:clamp(24px,8vh,40px); letter-spacing:8px; margin-bottom:2px; }
+    .lore{ margin:8px 0 12px; font-size:11px; line-height:1.55; }
+    .controls{ line-height:1.6; margin-bottom:12px; }
+    .btn{ padding:9px 30px; font-size:14px; letter-spacing:4px; }
+    .btn+.btn{ margin-top:8px; }
+    .endstat{ margin:8px 0 12px; font-size:12px; }
+  }
 
   /* touch controls */
   #touchUI{ position:fixed; inset:0; z-index:12; pointer-events:none; display:none; }
@@ -196,13 +233,10 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
 
 <div class="screen" id="menu">
   <div class="title">VOID <span class="v">TIDE</span></div>
-  <div class="lore">You are a lighthouse keeper on a lonely island in a dark sea.<br>
-    Creatures of the void tide surface offshore, swim for your island, crawl onto the beach,
-    and lay siege to the beacon at its heart.<br><br>
-    Survive <b style="color:var(--amber)">10 TIDES</b> and dawn breaks.<br>
-    Lose the beacon &mdash; or the keeper &mdash; and the tide claims all.</div>
-  <div class="controls" id="ctrlDesk">WASD MOVE &nbsp;&bull;&nbsp; MOUSE AIM &nbsp;&bull;&nbsp; LMB FIRE &nbsp;&bull;&nbsp; RMB AIM-DOWN-SIGHTS<br>SHIFT SPRINT &nbsp;&bull;&nbsp; R RELOAD &nbsp;&bull;&nbsp; ESC PAUSE</div>
-  <div class="controls" id="ctrlTouch" style="display:none">LEFT THUMB &mdash; MOVE &nbsp;&bull;&nbsp; RIGHT THUMB &mdash; AIM<br>FIRE / RLD BUTTONS &nbsp;&bull;&nbsp; II PAUSE</div>
+  <div class="lore">A lone keeper. A dark sea. The void tide is rising.<br>
+    Defend the beacon through <b style="color:var(--amber)">10 TIDES</b> and dawn breaks.</div>
+  <div class="controls" id="ctrlDesk">WASD MOVE &bull; MOUSE AIM &bull; LMB FIRE &bull; RMB SIGHTS &bull; SHIFT SPRINT &bull; R RELOAD</div>
+  <div class="controls" id="ctrlTouch" style="display:none">LEFT THUMB MOVE &bull; RIGHT THUMB AIM &bull; FIRE / RLD BUTTONS</div>
   <button class="btn" id="btnStart">LIGHT THE BEACON</button>
   <div id="bootErr" style="display:none; margin-top:22px; max-width:640px; font-size:12px; letter-spacing:1px;
     line-height:1.7; color:#ff8d99; border:1px solid rgba(255,59,78,.5); background:rgba(60,8,16,.4); padding:12px 16px;"></div>
@@ -1406,13 +1440,25 @@ function updateBeacon(dt, t){
 }
 
 // ---------------- resize ----------------
-addEventListener('resize', ()=>{
-  camera.aspect = innerWidth/innerHeight;
+// mobile browsers report stale sizes mid-rotation / fullscreen transition,
+// so re-measure on every related event and once more shortly after
+function doResize(){
+  const w = innerWidth, h = innerHeight;
+  camera.aspect = w/h;
   camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-});
+  renderer.setSize(w, h);
+}
+function doResizeSoon(){ doResize(); setTimeout(doResize, 350); setTimeout(doResize, 900); }
+addEventListener('resize', doResize);
+addEventListener('orientationchange', doResizeSoon);
+document.addEventListener('fullscreenchange', doResizeSoon);
+if (window.visualViewport) visualViewport.addEventListener('resize', doResize);
 
 // ---------------- main loop ----------------
+// PWA: offline cache + installability (skipped on file:// where SWs are unsupported)
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost'))
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
 const clock = new THREE.Clock();
 window.__vt.ready = true;
 window.__vt.debug = { G, P, fire: v => { P.firing = v; } };

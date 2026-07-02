@@ -48,6 +48,7 @@ No build step, no server, no internet required — three.js is inlined into the 
 
 - **Locally:** double-click `index.html`.
 - **GitHub Pages:** push to GitHub, then enable Pages (Settings → Pages → deploy from branch, root folder). The game will be live at `https://<username>.github.io/<repo>/`.
+- **Install as an app (PWA):** when hosted on Pages, open the game in a mobile browser and choose *Add to Home Screen* / *Install app*. The installed app launches truly fullscreen in landscape and works offline (`manifest.webmanifest` + `sw.js` + icons).
 
 If the start button ever does nothing, click it again — a diagnostic panel will appear on the menu explaining what failed (usually WebGL/hardware acceleration disabled in the browser).
 
