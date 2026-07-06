@@ -48,6 +48,10 @@ The beacon fights back: voidspawn caught in its sweeping light are seared and ke
 
 Chain kills within two seconds to multiply their score, up to **x5**. When something hurts you, a red arc around the crosshair points back at it — trust the arc, turn, and fire. The music itself is a warning: the war-drum swells as more creatures reach the sand.
 
+You carry **grenades** (`G` key / NADE button) — an arcing, bouncing blast that shreds beach clusters, restocked each tide. Watch the shore between tides for glowing **weapon crates**: they hold the *Squall SMG* (fast spray) or the *Abyss Lance* (slow, devastating sniper with deep zoom) — walking over one swaps your weapon, so choose your build.
+
+On the tenth tide the sky turns blood-red and the **Leviathan** rises: a serpent that circles offshore, bombards the beacon, and summons the deep. It only drops its guard while its maw is open — that glow is your target. Survive it and dawn breaks... or choose **THE TIDE RETURNS** and stand an endless watch, facing the Leviathan again every tenth tide. Your best score is remembered on the menu. Pause for look-sensitivity and volume sliders; on touch devices your shots bend slightly toward nearby creatures.
+
 ## Running It
 
 No build step, no server, no internet required — three.js is inlined into the file, so it works fully offline and behind corporate firewalls that block CDNs.
@@ -61,5 +65,6 @@ If the start button ever does nothing, click it again — a diagnostic panel wil
 ## Tech Notes
 
 - **Single file:** ~720 KB total, including all game code and an inlined copy of three.js r160 (MIT License, © three.js authors).
-- **Procedural everything:** terrain with vertex-colored flat shading, animated sea, lighthouse with a rotating volumetric beam, creatures, first-person rifle viewmodel — all built from primitive geometry at load time. Audio (gunfire, roars, sea ambience, void drone) is synthesized live with the Web Audio API.
+- **Procedural (almost) everything:** terrain with vertex-colored flat shading, animated sea, lighthouse with a rotating volumetric beam, creatures — all built from primitive geometry at load time. Audio (gunfire, roars, sea ambience, void drone) is synthesized live with the Web Audio API.
+- **The weapon** is a low-poly blaster model by [Kenney](https://kenney.nl) (CC0), embedded into the HTML as OBJ text and parsed by a tiny built-in loader. To swap it for another blaster from the pack: `node tools/embed-gun.js blaster-e` (any letter a–r from `gun-assets/`).
 - **Mobile:** touch joystick + aim drag, fullscreen with landscape orientation lock, reduced pixel ratio and shadows disabled for performance.
