@@ -1,10 +1,10 @@
-# VOID TIDE
+# VOID TIDE `v1.0`
 
 *You are a lighthouse keeper on a lonely island in a dark sea. Creatures of the void tide surface offshore, swim for your island, crawl onto the beach, and lay siege to the beacon at its heart.*
 
 **Survive 10 tides and dawn breaks. Lose the beacon — or the keeper — and the tide claims all.**
 
-A first-person shooter built with [three.js](https://threejs.org) in a **single HTML file**. Every asset is procedural low-poly geometry — no models, no textures, no sounds files, no network requests. Open `index.html` and play.
+A first-person shooter built with [three.js](https://threejs.org) in a **single HTML file** — no build step, no runtime downloads, works fully offline. The world, creatures, and audio are procedural low-poly; the weapons and props are CC0 models by Kenney, embedded right into the file. Open `index.html` and play.
 
 ## How to Play
 
@@ -22,16 +22,22 @@ Watch the minimap: white flashing dots are incoming voidspawn, and glowing eyes 
 | Mouse | Aim |
 | Left click | Fire |
 | Right click (hold) | Aim down sights |
+| `G` | Throw grenade |
 | `Shift` | Sprint |
 | `R` | Reload |
-| `Esc` / `P` | Pause |
+| `1` / `2` / `3` | Pick an upgrade card between tides |
+| `Esc` / `P` | Pause (sensitivity & volume sliders live there) |
 
 | Mobile (landscape) | |
 |---|---|
 | Left thumb | Move (virtual joystick) |
 | Right thumb drag | Aim |
-| `FIRE` / `RLD` buttons | Shoot / reload |
+| `FIRE` button | Hold to shoot — **drag on it to aim while firing** |
+| `RLD` / `NADE` buttons | Reload / throw grenade |
+| Tap a card | Pick an upgrade between tides |
 | `II` button | Pause |
+
+Mobile shots bend slightly toward nearby creatures (aim assist), and the game plays in landscape — install it as a PWA for true fullscreen.
 
 ### The Tide
 
@@ -44,7 +50,7 @@ Watch the minimap: white flashing dots are incoming voidspawn, and glowing eyes 
 | **Bloater** | Tide 7 | A throbbing walking bomb — pop it at range, never up close |
 | **Shrieker** | Tide 9 | Perches on the sand and screams the tide into a frenzy, calling reinforcements — silence it first |
 
-Enemies get tougher each tide. Your shield regenerates out of combat; your health only recovers from pickups.
+Enemies get tougher each tide. Your shield regenerates out of combat; your health only recovers from pickups. Attackers rear back before they strike — a melee windup you can dodge by moving out of reach before the slam lands.
 
 The beacon fights back: voidspawn caught in its sweeping light are seared and keep burning for a few seconds. Swimmers leave glowing bioluminescent wakes — watch the water to see the tide coming. Distant lightning builds with the later tides.
 
@@ -52,7 +58,7 @@ Chain kills within two seconds to multiply their score, up to **x5**. When somet
 
 You carry **grenades** (`G` key / NADE button) — an arcing, bouncing blast that shreds beach clusters, restocked each tide. Watch the shore between tides for glowing **weapon crates**: they hold the *Squall SMG* (fast spray) or the *Abyss Lance* (slow, devastating sniper with deep zoom) — walking over one swaps your weapon, so choose your build.
 
-On the tenth tide the sky turns blood-red and the **Leviathan** rises: a serpent that circles offshore, bombards the beacon, and summons the deep. It only drops its guard while its maw is open — that glow is your target. Survive it and dawn breaks... or choose **THE TIDE RETURNS** and stand an endless watch, facing the Leviathan again every tenth tide. Your best score is remembered on the menu. Pause for look-sensitivity and volume sliders; on touch devices your shots bend slightly toward nearby creatures.
+On the tenth tide the sky turns blood-red and the **Leviathan** rises: a serpent that circles offshore, bombards the beacon, and summons the deep. It only drops its guard while its maw is open — that glow is your target. Survive it and dawn breaks... or choose **THE TIDE RETURNS** and stand an endless watch, facing the Leviathan again every tenth tide. Your best score is remembered on the menu.
 
 ## Running It
 
@@ -66,7 +72,9 @@ If the start button ever does nothing, click it again — a diagnostic panel wil
 
 ## Tech Notes
 
-- **Single file:** ~720 KB total, including all game code and an inlined copy of three.js r160 (MIT License, © three.js authors).
-- **Procedural (almost) everything:** terrain with vertex-colored flat shading, animated sea, lighthouse with a rotating volumetric beam, creatures — all built from primitive geometry at load time. Audio (gunfire, roars, sea ambience, void drone) is synthesized live with the Web Audio API.
-- **The weapon** is a low-poly blaster model by [Kenney](https://kenney.nl) (CC0), embedded into the HTML as OBJ text and parsed by a tiny built-in loader. To swap it for another blaster from the pack: `node tools/embed-gun.js blaster-e` (any letter a–r from `gun-assets/`).
-- **Mobile:** touch joystick + aim drag, fullscreen with landscape orientation lock, reduced pixel ratio and shadows disabled for performance.
+- **Single file:** ~1 MB total, including all game code, an inlined copy of three.js r160 (MIT License, © three.js authors), and six embedded OBJ models.
+- **Procedural (almost) everything:** terrain with vertex-colored flat shading, animated sea, clouds, lightning, lighthouse with a rotating volumetric beam, all six creatures and the Leviathan — built from primitive geometry at load time. Audio (gunfire, roars, sea ambience, void drone, dynamic battle music) is synthesized live with the Web Audio API.
+- **Weapons & props** (three blasters, ammo clip, grenade, crate) are low-poly models by [Kenney](https://kenney.nl) (CC0), embedded into the HTML as OBJ text and parsed by a tiny built-in loader. To swap the starting rifle for another blaster from the pack: `node tools/embed-gun.js blaster-e` (any letter a–r from `gun-assets/`).
+- **Persistence:** best score/tide and settings live in localStorage.
+- **Mobile:** touch joystick, aim-while-firing drag, aim assist, fullscreen with landscape orientation lock, reduced pixel ratio and shadows disabled for performance.
+- **Version:** shown in the bottom-right of the menu — handy for checking that an installed PWA has picked up your latest deploy.
