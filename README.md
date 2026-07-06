@@ -38,9 +38,11 @@ Watch the minimap: white flashing dots are incoming voidspawn, and glowing eyes 
 | Creature | Appears | Behavior |
 |---|---|---|
 | **Snapper** | Tide 1 | Steady crawler, heads for the beacon |
-| **Lurker** | Tide 2 | Fast and fragile, hunts the keeper |
+| **Lurker** | Tide 1 | Fragile hunter that dashes in bursts — watch the rhythm, kite the pause |
 | **Spitter** | Tide 3 | Ranged — lobs void bile from a distance |
-| **Brute** | Tide 4+ | Slow, heavily armored, devastating against the beacon |
+| **Brute** | Tide 5 | Slow, heavily armored, devastating against the beacon |
+| **Bloater** | Tide 7 | A throbbing walking bomb — pop it at range, never up close |
+| **Shrieker** | Tide 9 | Perches on the sand and screams the tide into a frenzy, calling reinforcements — silence it first |
 
 Enemies get tougher each tide. Your shield regenerates out of combat; your health only recovers from pickups.
 
