@@ -26,7 +26,9 @@ Watch the minimap: white flashing dots are incoming voidspawn, and glowing eyes 
 | `Shift` | Sprint |
 | `R` | Reload |
 | `1` / `2` / `3` | Pick an upgrade card between tides |
-| `Esc` / `P` | Pause (sensitivity & volume sliders live there) |
+| `Esc` / `P` | Pause |
+
+A **Settings** screen (from the menu or pause) has sensitivity, volume, invert-Y, and a LOW/HIGH graphics quality toggle. A **How to Play** screen on the menu covers the rest.
 
 | Mobile (landscape) | |
 |---|---|

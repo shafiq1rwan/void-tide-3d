@@ -165,10 +165,41 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
     clip-path:polygon(0 0,100% 0,100% 100%,14px 100%,0 calc(100% - 14px)); transition:background .15s; }
   .btn:hover{ background:rgba(125,249,255,.18); }
   .btn+.btn{ margin-top:14px; }
-  .setrow{ pointer-events:auto; display:flex; align-items:center; gap:12px; width:min(380px,84vw); margin-bottom:16px; }
-  .setrow label{ font-size:10px; letter-spacing:2px; color:var(--dim); width:90px; text-align:right; }
-  .setrow span{ font-size:11px; color:var(--cyan); width:44px; text-align:left; }
-  .setrow input[type=range]{ flex:1; accent-color:#7df9ff; touch-action:auto; }
+  .btn.primary{ background:rgba(125,249,255,.12); }
+  .btn.sub{ font-size:clamp(11px,2.2vw,14px); padding:11px 34px; letter-spacing:4px;
+    box-shadow:none; border-color:rgba(125,249,255,.35); color:#a8dfe8; }
+  .btn.sub:hover{ border-color:var(--cyan); color:var(--cyan); }
+  body.touch .btn.sub{ padding:13px 34px; }
+  .title.small{ font-size:clamp(22px,5vw,42px); letter-spacing:8px; margin-bottom:8px; }
+
+  /* settings screen */
+  .setpanel{ display:flex; flex-direction:column; align-items:stretch; margin:8px 0 18px; }
+  .setrow{ pointer-events:auto; display:flex; align-items:center; gap:12px; width:min(400px,86vw); margin-bottom:18px; }
+  .setrow label{ font-size:10px; letter-spacing:2px; color:var(--dim); width:92px; text-align:right; flex:none; }
+  .setrow span{ font-size:11px; color:var(--cyan); width:44px; text-align:left; flex:none; }
+  .setrow input[type=range]{ flex:1; height:30px; accent-color:#7df9ff; touch-action:auto; }
+  .seg{ display:flex; gap:8px; flex:1; }
+  .seg button{ pointer-events:auto; cursor:pointer; flex:1; font-family:inherit; font-size:11px;
+    letter-spacing:2px; padding:10px 0; color:var(--dim); background:rgba(6,14,24,.7);
+    border:1px solid rgba(125,249,255,.25); transition:all .15s; }
+  .seg button.on{ color:var(--cyan); border-color:var(--cyan); background:rgba(125,249,255,.12);
+    text-shadow:0 0 6px rgba(125,249,255,.6); }
+
+  /* how-to-play screen */
+  .howcol{ max-width:620px; text-align:left; font-size:11.5px; letter-spacing:1px;
+    line-height:1.85; color:var(--dim); margin-bottom:16px; }
+  .howcol b{ color:var(--cyan); letter-spacing:2px; }
+  .howcol p{ margin-bottom:10px; }
+  body.touch .deskonly{ display:none; }
+  body:not(.touch) .touchonly{ display:none; }
+
+  /* menu entrance */
+  #menu .title{ animation:menuIn .9s ease-out; }
+  @keyframes menuIn{ from{ opacity:0; transform:translateY(-16px); } }
+  #menu .lore{ animation:upfade .7s ease-out backwards .15s; }
+  #menu #bestLine{ animation:upfade .7s ease-out backwards .25s; }
+  #menu .btn{ animation:upfade .6s ease-out backwards; }
+  #btnStart{ animation-delay:.3s; } #btnHow{ animation-delay:.42s; } #btnMenuSet{ animation-delay:.54s; }
   .endstat{ font-size:clamp(13px,3vw,17px); letter-spacing:3px; color:var(--amber); margin:16px 0 26px; line-height:2; }
   #goTitle.red{ color:#ffb3bb; text-shadow:0 0 16px rgba(255,59,78,.9),0 0 60px rgba(255,59,78,.5); }
   #vicTitle{ color:#ffe9c4; text-shadow:0 0 16px rgba(255,216,138,.9),0 0 60px rgba(255,180,80,.5); }
@@ -357,22 +388,45 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
   <div class="title">VOID <span class="v">TIDE</span></div>
   <div class="lore">A lone keeper. A dark sea. The void tide is rising.<br>
     Defend the beacon through <b style="color:var(--amber)">10 TIDES</b> and dawn breaks.</div>
-  <div class="controls" id="ctrlDesk">WASD MOVE &bull; MOUSE AIM &bull; LMB FIRE &bull; RMB SIGHTS &bull; G GRENADE &bull; SHIFT SPRINT &bull; R RELOAD</div>
-  <div class="controls" id="ctrlTouch" style="display:none">LEFT THUMB MOVE &bull; RIGHT THUMB AIM &bull; FIRE / RLD / NADE BUTTONS</div>
   <div class="controls" id="bestLine" style="display:none; color:var(--amber);"></div>
-  <button class="btn" id="btnStart">LIGHT THE BEACON</button>
-  <div class="ver">v1.0</div>
+  <button class="btn primary" id="btnStart">LIGHT THE BEACON</button>
+  <button class="btn sub" id="btnHow">HOW TO PLAY</button>
+  <button class="btn sub" id="btnMenuSet">SETTINGS</button>
+  <div class="ver">v1.1</div>
   <div id="bootErr" style="display:none; margin-top:22px; max-width:640px; font-size:12px; letter-spacing:1px;
     line-height:1.7; color:#ff8d99; border:1px solid rgba(255,59,78,.5); background:rgba(60,8,16,.4); padding:12px 16px;"></div>
 </div>
 
 <div class="screen hidden" id="pauseScr">
-  <div class="title" style="font-size:clamp(26px,6vw,48px)">PAUSED</div>
+  <div class="title small">PAUSED</div>
   <div class="lore">The tide waits for no one... but it will wait for you.</div>
-  <div class="setrow"><label>SENSITIVITY</label><input type="range" id="setSens" min="30" max="220" value="100"><span id="setSensV">1.0x</span></div>
-  <div class="setrow"><label>VOLUME</label><input type="range" id="setVol" min="0" max="100" value="100"><span id="setVolV">100%</span></div>
-  <button class="btn" id="btnResume">RESUME</button>
-  <button class="btn" id="btnQuit">ABANDON POST</button>
+  <button class="btn primary" id="btnResume">RESUME</button>
+  <button class="btn sub" id="btnPauseSet">SETTINGS</button>
+  <button class="btn sub" id="btnQuit">ABANDON POST</button>
+</div>
+
+<div class="screen hidden" id="setScr">
+  <div class="title small">SETTINGS</div>
+  <div class="setpanel">
+    <div class="setrow"><label>SENSITIVITY</label><input type="range" id="setSens" min="30" max="220" value="100"><span id="setSensV">1.0x</span></div>
+    <div class="setrow"><label>VOLUME</label><input type="range" id="setVol" min="0" max="100" value="100"><span id="setVolV">100%</span></div>
+    <div class="setrow"><label>INVERT Y</label><div class="seg" id="setInv"><button data-v="0">OFF</button><button data-v="1">ON</button></div></div>
+    <div class="setrow"><label>QUALITY</label><div class="seg" id="setQ"><button data-v="low">LOW</button><button data-v="high">HIGH</button></div></div>
+  </div>
+  <button class="btn" id="btnSetBack">BACK</button>
+</div>
+
+<div class="screen hidden" id="howScr">
+  <div class="title small">HOW TO PLAY</div>
+  <div class="howcol">
+    <p><b>THE WATCH</b> &mdash; Creatures rise from the sea each tide and besiege the beacon at the island's heart. If the light goes dark &mdash; or you fall &mdash; the run ends. Survive 10 tides and dawn breaks.</p>
+    <p class="deskonly"><b>CONTROLS</b> &mdash; WASD move &bull; mouse aim &bull; LMB fire &bull; RMB sights &bull; G grenade &bull; R reload &bull; SHIFT sprint &bull; 1/2/3 pick upgrades &bull; ESC pause</p>
+    <p class="touchonly"><b>CONTROLS</b> &mdash; Left thumb moves, right thumb aims. Hold FIRE and drag it to aim while shooting. RLD reloads, NADE throws a grenade, tap a card to pick an upgrade.</p>
+    <p><b>THE LIGHT</b> &mdash; The beacon's sweeping beam sears creatures caught in it. Keep it alive; it fights beside you.</p>
+    <p><b>SURVIVE</b> &mdash; Kills within 2 seconds chain up to x5 score. Red arcs show what hurt you; cyan chevrons point at threats you can't see; a skitter means something is right behind you. Grab glowing pickups, watch the shore for weapon crates, and pop bloaters from a distance.</p>
+    <p><b>THE DEEP</b> &mdash; Every tenth tide the Leviathan rises. Its glowing maw is the only soft spot.</p>
+  </div>
+  <button class="btn" id="btnHowBack">BACK</button>
 </div>
 
 <div class="screen hidden" id="gameover">
@@ -7667,9 +7721,11 @@ const lerp  = (a,b,t)=> a + (b-a)*t;
 const TAU = Math.PI*2;
 const V3 = ()=> new THREE.Vector3();
 const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-if (isTouch) { document.body.classList.add('touch');
-  document.getElementById('ctrlDesk').style.display='none';
-  document.getElementById('ctrlTouch').style.display=''; }
+if (isTouch) document.body.classList.add('touch');
+
+// settings, loaded before the renderer so quality applies from the first frame
+const SET = { sens: 1, vol: 1, invY: 0, quality: isTouch ? 'low' : 'high' };
+try{ Object.assign(SET, JSON.parse(localStorage.getItem('voidtide-settings') || '{}')); }catch(e){}
 
 const $ = id => document.getElementById(id);
 
@@ -7809,9 +7865,9 @@ try{
   window.__vt.errors.push('WebGL unavailable: ' + err.message + ' (enable hardware acceleration in browser settings)');
   throw err;
 }
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, isTouch ? 1.6 : 2));
+renderer.setPixelRatio(SET.quality === 'high' ? Math.min(window.devicePixelRatio, 2) : 1);
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = !isTouch;
+renderer.shadowMap.enabled = SET.quality === 'high';
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
@@ -7825,9 +7881,9 @@ const camera = new THREE.PerspectiveCamera(72, innerWidth/innerHeight, 0.06, 500
 const ambient = new THREE.AmbientLight(0x3a4a6a, 1.05); scene.add(ambient);
 const moonLight = new THREE.DirectionalLight(0x7d94c8, 1.0);
 moonLight.position.set(-60, 80, -70);
-if (!isTouch){
-  moonLight.castShadow = true;
-  moonLight.shadow.mapSize.set(1024,1024);
+moonLight.castShadow = true;
+moonLight.shadow.mapSize.set(1024,1024);
+{
   const c = moonLight.shadow.camera;
   c.left=-34; c.right=34; c.top=34; c.bottom=-34; c.near=10; c.far=220;
 }
@@ -7994,7 +8050,7 @@ const lambert = c => new THREE.MeshLambertMaterial({ color:c, flatShading:true }
 function addProp(mesh, x, z, sink=0.15){
   mesh.position.set(x, terrainHeight(x,z)-sink, z);
   mesh.rotation.y = rand(0,TAU);
-  if (!isTouch) mesh.castShadow = true;
+  mesh.castShadow = true;
   scene.add(mesh); return mesh;
 }
 {
@@ -8071,7 +8127,7 @@ let lampLight, beamSpot, lampMat;
   beamGroup.add(tgt); beamSpot.target = tgt; beamGroup.add(beamSpot);
   lighthouse.add(beamGroup);
 
-  lighthouse.traverse(o=>{ if (o.isMesh && !isTouch) o.castShadow = true; });
+  lighthouse.traverse(o=>{ if (o.isMesh) o.castShadow = true; });
   scene.add(lighthouse);
 }
 const BEACON_POS = new THREE.Vector3(0, terrainHeight(0,0)+1.5, 0);
@@ -8288,7 +8344,7 @@ function buildCreature(type){
     }
   }
   g.scale.setScalar(T.scale);
-  g.traverse(o=>{ if (o.isMesh){ o.userData.enemyPart = true; if (!isTouch) o.castShadow = true; } });
+  g.traverse(o=>{ if (o.isMesh){ o.userData.enemyPart = true; o.castShadow = true; } });
   return { group:g, legs, mats, sacMat };
 }
 function spawnEnemy(type){
@@ -8684,7 +8740,7 @@ function spawnCrate(){
   const m = new THREE.Mesh(crateGeo, gunMat);
   m.position.set(x, terrainHeight(x, z) + 0.02, z);
   m.rotation.y = rand(0, TAU);
-  if (!isTouch) m.castShadow = true;
+  m.castShadow = true;
   scene.add(m);
   crates.push({ m, weapon: w, glowT: 0 });
 }
@@ -9241,11 +9297,21 @@ function updateDawn(dt){
   }
 }
 
-// ---------------- settings (persisted) ----------------
-const SET = { sens: 1, vol: 1 };
-try{ Object.assign(SET, JSON.parse(localStorage.getItem('voidtide-settings') || '{}')); }catch(e){}
+// ---------------- settings UI ----------------
 function applyVolume(){ if (master) master.gain.value = 0.5*SET.vol; }
 function saveSettings(){ try{ localStorage.setItem('voidtide-settings', JSON.stringify(SET)); }catch(e){} }
+function applyQuality(){
+  const hi = SET.quality === 'high';
+  renderer.setPixelRatio(hi ? Math.min(window.devicePixelRatio, 2) : 1);
+  renderer.setSize(innerWidth, innerHeight);
+  if (renderer.shadowMap.enabled !== hi){
+    renderer.shadowMap.enabled = hi;
+    scene.traverse(o => {
+      const m = o.material;
+      if (m) (Array.isArray(m) ? m : [m]).forEach(x => x.needsUpdate = true);
+    });
+  }
+}
 {
   const sens = $('setSens'), vol = $('setVol');
   sens.value = Math.round(SET.sens*100);
@@ -9257,7 +9323,29 @@ function saveSettings(){ try{ localStorage.setItem('voidtide-settings', JSON.str
   label();
   sens.addEventListener('input', ()=>{ SET.sens = sens.value/100; label(); saveSettings(); });
   vol.addEventListener('input', ()=>{ SET.vol = vol.value/100; applyVolume(); label(); saveSettings(); });
+  // segmented toggles
+  const segInit = (id, cur, cb)=>{
+    const btns = $(id).querySelectorAll('button');
+    for (const b of btns){
+      b.classList.toggle('on', b.dataset.v == cur);
+      b.addEventListener('click', ()=>{
+        for (const x of btns) x.classList.remove('on');
+        b.classList.add('on');
+        cb(b.dataset.v);
+        saveSettings();
+      });
+    }
+  };
+  segInit('setInv', SET.invY ? '1' : '0', v => { SET.invY = +v; });
+  segInit('setQ', SET.quality, v => { SET.quality = v; applyQuality(); });
 }
+// screen navigation: settings reachable from menu and pause
+let setReturn = 'menu';
+$('btnHow').addEventListener('click', ()=>{ $('menu').classList.add('hidden'); $('howScr').classList.remove('hidden'); });
+$('btnHowBack').addEventListener('click', ()=>{ $('howScr').classList.add('hidden'); $('menu').classList.remove('hidden'); });
+$('btnMenuSet').addEventListener('click', ()=>{ setReturn = 'menu'; $('menu').classList.add('hidden'); $('setScr').classList.remove('hidden'); });
+$('btnPauseSet').addEventListener('click', ()=>{ setReturn = 'pauseScr'; $('pauseScr').classList.add('hidden'); $('setScr').classList.remove('hidden'); });
+$('btnSetBack').addEventListener('click', ()=>{ $('setScr').classList.add('hidden'); $(setReturn).classList.remove('hidden'); });
 
 // ---------------- input: desktop ----------------
 const keys = {};
@@ -9275,7 +9363,7 @@ addEventListener('contextmenu', e=> e.preventDefault());
 document.addEventListener('mousemove', e=>{
   if (!document.pointerLockElement) return;
   P.yaw   -= e.movementX * 0.0022 * SET.sens;
-  P.pitch -= e.movementY * 0.0022 * SET.sens;
+  P.pitch -= e.movementY * 0.0022 * SET.sens * (SET.invY ? -1 : 1);
   P.pitch = clamp(P.pitch, -1.1, 0.72);
 });
 document.addEventListener('mousedown', e=>{
@@ -9329,7 +9417,7 @@ if (isTouch){
         n.style.left = (joy.ox+dx)+'px'; n.style.top = (joy.oy+dy)+'px';
       } else if (t.identifier === lookId){
         P.yaw   -= (t.clientX - lookX) * 0.0052 * SET.sens;
-        P.pitch -= (t.clientY - lookY) * 0.0052 * SET.sens;
+        P.pitch -= (t.clientY - lookY) * 0.0052 * SET.sens * (SET.invY ? -1 : 1);
         P.pitch = clamp(P.pitch, -1.1, 0.72);
         lookX = t.clientX; lookY = t.clientY;
       }
@@ -9359,7 +9447,7 @@ if (isTouch){
     for (const t of e.changedTouches){
       if (t.identifier !== fireLook.id) continue;
       P.yaw   -= (t.clientX - fireLook.x) * 0.0052 * SET.sens;
-      P.pitch  = clamp(P.pitch - (t.clientY - fireLook.y) * 0.0052 * SET.sens, -1.1, 0.72);
+      P.pitch  = clamp(P.pitch - (t.clientY - fireLook.y) * 0.0052 * SET.sens * (SET.invY ? -1 : 1), -1.1, 0.72);
       fireLook.x = t.clientX; fireLook.y = t.clientY;
     }
   }, {passive:false});
@@ -9383,7 +9471,10 @@ function resumeGame(){
   $('pauseScr').classList.add('hidden');
   lockPointer();
 }
-function togglePause(){ G.paused ? resumeGame() : pauseGame(); }
+function togglePause(){
+  if (!$('setScr').classList.contains('hidden')) return; // settings open: back out first
+  G.paused ? resumeGame() : pauseGame();
+}
 
 $('btnStart').addEventListener('click', ()=>{
   initAudio();
