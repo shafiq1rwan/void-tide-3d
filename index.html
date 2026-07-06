@@ -152,8 +152,19 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
   /* flexible spacers center the content but collapse when it overflows, keeping it scrollable */
   .screen::before, .screen::after{ content:''; flex:1 1 0; min-height:8px; }
   .screen.hidden{ display:none; }
-  .ver{ position:absolute; right:calc(14px + env(safe-area-inset-right)); bottom:calc(10px + env(safe-area-inset-bottom));
+  .ver{ position:absolute; left:50%; transform:translateX(-50%); bottom:calc(10px + env(safe-area-inset-bottom));
     font-size:10px; letter-spacing:2px; color:#3d5266; }
+
+  /* corner icon buttons (menu / pause) */
+  .iconbtn{ position:absolute; pointer-events:auto; cursor:pointer; width:46px; height:46px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-family:inherit; font-size:20px;
+    color:var(--cyan); background:rgba(6,14,24,.6); border:1px solid rgba(125,249,255,.4);
+    text-shadow:0 0 8px rgba(125,249,255,.6); transition:border-color .15s, background .15s, transform .15s;
+    animation:upfade .6s ease-out backwards .5s; }
+  .iconbtn svg{ filter:drop-shadow(0 0 4px rgba(125,249,255,.5)); }
+  .iconbtn:hover{ border-color:var(--cyan); background:rgba(125,249,255,.12); transform:scale(1.08); }
+  .iconbtn.tl{ top:calc(14px + env(safe-area-inset-top)); left:calc(14px + env(safe-area-inset-left)); }
+  .iconbtn.tr{ top:calc(14px + env(safe-area-inset-top)); right:calc(14px + env(safe-area-inset-right)); }
   .title{ font-size:clamp(38px,9vw,84px); letter-spacing:16px; color:#eaf7ff;
     text-shadow:0 0 16px rgba(125,249,255,.9), 0 0 60px rgba(125,249,255,.45); margin-bottom:6px; }
   .title .v{ color:var(--cyan); }
@@ -257,8 +268,10 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
     width:56px; height:56px; font-size:11px; border-color:rgba(255,216,138,.6); color:var(--amber); }
   #btnPause{ position:absolute; pointer-events:auto; top:calc(12px + env(safe-area-inset-top)); left:50%;
     margin-left:calc(min(280px,30vw)/2 + 14px); width:34px; height:34px; border-radius:6px;
-    border:1px solid rgba(125,249,255,.4); background:rgba(6,12,20,.55); color:var(--cyan);
-    font-family:inherit; font-size:13px; display:none; align-items:center; justify-content:center; }
+    border:1px solid rgba(125,249,255,.4); background:rgba(6,12,20,.55);
+    display:none; align-items:center; justify-content:center; gap:4px; }
+  #btnPause .pbar{ width:4px; height:14px; border-radius:1px; background:var(--cyan);
+    box-shadow:0 0 5px rgba(125,249,255,.7); }
   body.touch #btnPause{ display:flex; }
   /* on touch devices the weapon card docks under the shield bar, clear of the buttons */
   body.touch #weapons{
@@ -362,7 +375,7 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
   <div id="dmgdirs"></div>
   <div id="edirs"></div>
   <div id="combo"></div>
-  <button id="btnPause">II</button>
+  <button id="btnPause" aria-label="Pause"><span class="pbar"></span><span class="pbar"></span></button>
 </div>
 
 <div id="announce"><div class="big" id="annBig"></div><div class="sub" id="annSub"></div></div>
@@ -390,8 +403,10 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
     Defend the beacon through <b style="color:var(--amber)">10 TIDES</b> and dawn breaks.</div>
   <div class="controls" id="bestLine" style="display:none; color:var(--amber);"></div>
   <button class="btn primary" id="btnStart">LIGHT THE BEACON</button>
-  <button class="btn sub" id="btnHow">HOW TO PLAY</button>
-  <button class="btn sub" id="btnMenuSet">SETTINGS</button>
+  <button class="iconbtn tl" id="btnHow" aria-label="How to play">?</button>
+  <button class="iconbtn tr" id="btnMenuSet" aria-label="Settings">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+  </button>
   <div class="ver">v1.1</div>
   <div id="bootErr" style="display:none; margin-top:22px; max-width:640px; font-size:12px; letter-spacing:1px;
     line-height:1.7; color:#ff8d99; border:1px solid rgba(255,59,78,.5); background:rgba(60,8,16,.4); padding:12px 16px;"></div>
@@ -401,8 +416,10 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
   <div class="title small">PAUSED</div>
   <div class="lore">The tide waits for no one... but it will wait for you.</div>
   <button class="btn primary" id="btnResume">RESUME</button>
-  <button class="btn sub" id="btnPauseSet">SETTINGS</button>
   <button class="btn sub" id="btnQuit">ABANDON POST</button>
+  <button class="iconbtn tr" id="btnPauseSet" aria-label="Settings">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+  </button>
 </div>
 
 <div class="screen hidden" id="setScr">
