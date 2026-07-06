@@ -107,6 +107,16 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
     border:4px solid transparent; border-top-color:rgba(255,59,78,.9); opacity:0;
     filter:drop-shadow(0 0 6px rgba(255,59,78,.7)); }
 
+  /* off-screen enemy direction chevrons */
+  #edirs{ position:absolute; left:50%; top:50%; }
+  .edir{ position:absolute; left:0; top:0; opacity:0; transition:opacity .25s; }
+  .edir .ch{ position:absolute; left:-7px; top:-74px; width:0; height:0;
+    border-left:7px solid transparent; border-right:7px solid transparent;
+    border-bottom:11px solid rgba(125,249,255,.85);
+    filter:drop-shadow(0 0 5px rgba(125,249,255,.6)); }
+  .edir.boss .ch{ border-bottom-color:rgba(255,90,61,.95); border-left-width:9px; border-right-width:9px;
+    border-bottom-width:14px; left:-9px; filter:drop-shadow(0 0 6px rgba(255,90,61,.7)); }
+
   /* kill combo popup */
   #combo{ position:absolute; left:50%; top:calc(50% + 46px); transform:translateX(-50%);
     font-size:16px; letter-spacing:3px; color:var(--amber);
@@ -177,7 +187,8 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
       right:calc(112px + env(safe-area-inset-right)); bottom:calc(92px + env(safe-area-inset-bottom)); }
     #btnNade{ width:48px; height:48px; font-size:10px;
       right:calc(112px + env(safe-area-inset-right)); bottom:calc(38px + env(safe-area-inset-bottom)); }
-    body.touch #weapons{ right:calc(168px + env(safe-area-inset-right)); bottom:calc(10px + env(safe-area-inset-bottom)); }
+    body.touch #weapons{ top:calc(62px + env(safe-area-inset-top)); }
+    body.touch #ammoLine{ font-size:15px; }
   }
   /* compact layout for short screens (landscape phones) */
   @media (max-height:560px){
@@ -212,7 +223,16 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
     border:1px solid rgba(125,249,255,.4); background:rgba(6,12,20,.55); color:var(--cyan);
     font-family:inherit; font-size:13px; display:none; align-items:center; justify-content:center; }
   body.touch #btnPause{ display:flex; }
-  body.touch #weapons{ bottom:calc(20px + env(safe-area-inset-bottom)); right:calc(120px + env(safe-area-inset-right)); }
+  /* on touch devices the weapon card docks under the shield bar, clear of the buttons */
+  body.touch #weapons{
+    left:16px; right:auto; top:calc(78px + env(safe-area-inset-top)); bottom:auto;
+    text-align:left; padding:6px 12px 8px;
+    clip-path:polygon(0 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%);
+  }
+  body.touch #ammoLine{ font-size:18px; }
+  body.touch #statLines{ font-size:10px; margin-top:3px; line-height:1.5; }
+  body.touch #wname{ font-size:8px; letter-spacing:2px; }
+  body.touch #reloadTag{ font-size:9px; height:11px; }
 
   #vignette{ position:fixed; inset:0; pointer-events:none; z-index:8;
     background:radial-gradient(ellipse at center, transparent 62%, rgba(0,0,0,.55) 100%); }
@@ -285,6 +305,7 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
   <div id="xh"><div class="xt h t1"></div><div class="xt h t2"></div><div class="xt v t3"></div><div class="xt v t4"></div><div id="xdot"></div></div>
   <div id="hitmark"><div class="m m1"></div><div class="m m2"></div><div class="m m3"></div><div class="m m4"></div></div>
   <div id="dmgdirs"></div>
+  <div id="edirs"></div>
   <div id="combo"></div>
   <button id="btnPause">II</button>
 </div>
@@ -9359,6 +9380,44 @@ function updateHUD(){
   hud.lowhp.classList.toggle('on', P.hp <= 30 && G.mode !== 'over');
 }
 
+// ---------------- off-screen threat chevrons ----------------
+const edirPool = [];
+{
+  const wrap = $('edirs');
+  for (let i=0;i<5;i++){
+    const d = document.createElement('div');
+    d.className = 'edir';
+    d.innerHTML = '<div class="ch"></div>';
+    wrap.appendChild(d); edirPool.push(d);
+  }
+}
+function updateEnemyDirs(){
+  const targets = [];
+  const consider = (pos, isBoss)=>{
+    const dx = pos.x - player.position.x, dz = pos.z - player.position.z;
+    const dist = Math.hypot(dx, dz);
+    if (dist > 70) return;
+    let rel = Math.atan2(dx, dz) - P.yaw;
+    rel = ((rel + Math.PI) % TAU + TAU) % TAU - Math.PI;   // wrap to [-pi, pi]
+    if (Math.abs(rel) < 0.7) return;                        // roughly in view already
+    targets.push({ rel, dist, isBoss });
+  };
+  if (!G.paused && G.mode !== 'menu' && G.mode !== 'over'){
+    for (const e of enemies) consider(e.group.position, false);
+    if (boss) consider(boss.head.position, true);
+  }
+  targets.sort((a, b) => (b.isBoss - a.isBoss) || (a.dist - b.dist));
+  for (let i=0;i<edirPool.length;i++){
+    const el = edirPool[i];
+    if (i < targets.length){
+      const tg = targets[i];
+      el.classList.toggle('boss', tg.isBoss);
+      el.style.opacity = tg.isBoss ? 0.95 : clamp(1.1 - tg.dist/60, 0.3, 0.8);
+      el.style.transform = 'rotate(' + (-tg.rel*180/Math.PI).toFixed(1) + 'deg)';
+    } else el.style.opacity = 0;
+  }
+}
+
 // ---------------- minimap ----------------
 const mapC = $('minimap').getContext('2d');
 const MAP_S = 150, MAP_R = 70, WORLD_R = 62;
@@ -9485,6 +9544,7 @@ function frame(){
     updateCamera(dt);
     updateHUD();
     updateMinimap(t);
+    updateEnemyDirs();
   } else {
     // slow menu orbit around the island
     const a = t*0.08;
