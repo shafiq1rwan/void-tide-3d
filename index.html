@@ -332,6 +332,30 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
     .uptitle{ font-size:11px; }
   }
 
+  /* beacon overcharge: white-out flash + cooldown ring */
+  #flashWhite{ position:fixed; inset:0; pointer-events:none; z-index:14; opacity:0;
+    background:radial-gradient(ellipse at center, rgba(255,245,220,.95), rgba(255,235,190,.65) 45%, rgba(255,225,160,.2) 100%);
+    transition:opacity 1.1s ease-out; }
+  #btnFlare{ position:absolute; pointer-events:auto; cursor:pointer; left:16px; bottom:16px;
+    width:54px; height:54px; border-radius:50%; border:none; padding:3px;
+    background:conic-gradient(rgba(255,216,138,.2) 0%, rgba(255,216,138,.12) 0); font-family:inherit; }
+  #btnFlare span{ display:flex; align-items:center; justify-content:center; width:100%; height:100%;
+    border-radius:50%; background:rgba(10,14,22,.85); color:var(--amber); font-size:15px; letter-spacing:1px; }
+  #btnFlare.ready{ animation:flareReady 1.6s ease-in-out infinite; }
+  @keyframes flareReady{ 0%,100%{ box-shadow:0 0 8px rgba(255,216,138,.3); } 50%{ box-shadow:0 0 22px rgba(255,216,138,.85); } }
+  body.touch #btnFlare{ left:auto; right:calc(198px + env(safe-area-inset-right)); bottom:calc(64px + env(safe-area-inset-bottom)); }
+  body.touch #btnFlare span{ font-size:9px; letter-spacing:1px; }
+  @media (max-height:480px){
+    body.touch #btnFlare{ right:calc(186px + env(safe-area-inset-right)); bottom:calc(46px + env(safe-area-inset-bottom)); width:48px; height:48px; }
+  }
+
+  /* mend-the-light prompt & button */
+  #repairHint{ position:absolute; left:50%; top:63%; transform:translateX(-50%); font-size:12px;
+    letter-spacing:3px; color:var(--amber); text-shadow:0 0 8px rgba(255,216,138,.7);
+    opacity:0; transition:opacity .2s; white-space:nowrap; }
+  #btnMend{ left:calc(50% - 31px); bottom:calc(28px + env(safe-area-inset-bottom)); width:62px; height:62px;
+    border-color:rgba(255,216,138,.65); color:var(--amber); background:rgba(50,38,10,.5); display:none; font-size:11px; }
+
   /* landscape prompt for phones held in portrait */
   #rotateHint{ position:fixed; inset:0; z-index:40; display:none; flex-direction:column; align-items:center;
     justify-content:center; text-align:center; background:rgba(3,6,12,.95); letter-spacing:5px;
@@ -344,6 +368,7 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
 </head>
 <body>
 <canvas id="game"></canvas>
+<div id="flashWhite"></div>
 <div id="rotateHint"><div class="ph">&#128241;</div>ROTATE DEVICE<span>VOID TIDE PLAYS IN LANDSCAPE</span></div>
 <div id="vignette"></div>
 <div id="dmgVig"></div>
@@ -378,6 +403,8 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
   <div id="edirs"></div>
   <div id="combo"></div>
   <button id="btnPause" aria-label="Pause"><span class="pbar"></span><span class="pbar"></span></button>
+  <button id="btnFlare" aria-label="Beacon overcharge"><span id="flareLbl">Q</span></button>
+  <div id="repairHint">HOLD E &mdash; MEND THE LIGHT</div>
 </div>
 
 <div id="announce"><div class="big" id="annBig"></div><div class="sub" id="annSub"></div></div>
@@ -397,6 +424,7 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
   <button class="tbtn" id="btnFire">FIRE</button>
   <button class="tbtn" id="btnReload">RLD</button>
   <button class="tbtn" id="btnNade">NADE</button>
+  <button class="tbtn" id="btnMend">MEND</button>
 </div>
 
 <div class="screen" id="menu">
@@ -441,7 +469,7 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
     <p><b>THE WATCH</b> &mdash; Creatures rise from the sea each tide and besiege the beacon at the island's heart. If the light goes dark &mdash; or you fall &mdash; the run ends. Survive 10 tides and dawn breaks.</p>
     <p class="deskonly"><b>CONTROLS</b> &mdash; WASD move &bull; mouse aim &bull; LMB fire &bull; RMB sights &bull; G grenade &bull; R reload &bull; SHIFT sprint &bull; 1/2/3 pick upgrades &bull; ESC pause</p>
     <p class="touchonly"><b>CONTROLS</b> &mdash; Left thumb moves &mdash; push the stick to its edge to sprint (the ring glows). Right thumb aims. Hold FIRE and drag it to aim while shooting. RLD reloads, NADE throws a grenade, tap a card to pick an upgrade.</p>
-    <p><b>THE LIGHT</b> &mdash; The beacon's sweeping beam sears creatures caught in it. Keep it alive; it fights beside you.</p>
+    <p><b>THE LIGHT</b> &mdash; The beacon's sweeping beam sears creatures caught in it. Keep it alive; it fights beside you. <span class="deskonly">Hold <b>E</b> at the tower base to mend it, and press <b>Q</b> to overcharge the lamp</span><span class="touchonly">Hold <b>MEND</b> at the tower base to repair it, and tap <b>FLARE</b> to overcharge the lamp</span> &mdash; a blinding pulse that ignites everything on the island (60s cooldown).</p>
     <p><b>SURVIVE</b> &mdash; Kills within 2 seconds chain up to x5 score. Red arcs show what hurt you; cyan chevrons point at threats you can't see; a skitter means something is right behind you. Grab glowing pickups, watch the shore for weapon crates, and pop bloaters from a distance.</p>
     <p><b>THE DEEP</b> &mdash; Every tenth tide the Leviathan rises. Its glowing maw is the only soft spot.</p>
   </div>
@@ -7741,6 +7769,7 @@ const TAU = Math.PI*2;
 const V3 = ()=> new THREE.Vector3();
 const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 if (isTouch) document.body.classList.add('touch');
+document.getElementById('flareLbl').textContent = isTouch ? 'FLARE' : 'Q';
 
 // settings, loaded before the renderer so quality applies from the first frame
 const SET = { sens: 1, vol: 1, invY: 0, quality: isTouch ? 'low' : 'high' };
@@ -7765,7 +7794,9 @@ const P = {              // player / keeper
 };
 const U = { beam: 1, dmg: 1, drop: 1 };  // upgrade multipliers
 const BEACON = { hp: 100, hpMax: 100, alarmT: 0, flashT: 0, shakeT: 0 };
-let shakeT = 0, shakeAmp = 0;
+const OC = { cd: 0, max: 60, flashK: 0 };  // beacon overcharge
+let shakeT = 0, shakeAmp = 0, slowmoT = 0;
+let mendHold = false, repairFxT = 0;
 
 // ---------------- best-watch record (localStorage) ----------------
 let bestData = null;
@@ -7871,6 +7902,8 @@ const sfx = {
   thunder(){ noiseHit(1.7, 75, 0.38, 'lowpass', 0.6); noiseHit(0.9, 48, 0.28, 'lowpass'); },
   boom(){ noiseHit(0.9, 130, 0.5, 'lowpass'); tone(95, 28, 0.55, 0.3, 'sawtooth'); noiseHit(0.35, 600, 0.18); },
   shriek(){ tone(1500, 480, 0.55, 0.12, 'sawtooth'); tone(1900, 750, 0.5, 0.08, 'square'); },
+  flare(){ tone(180, 1500, 0.7, 0.2, 'sawtooth'); noiseHit(0.9, 1400, 0.22); tone(90, 38, 0.9, 0.24, 'sine'); },
+  clink(){ tone(1300, 950, 0.06, 0.09, 'square'); noiseHit(0.04, 3200, 0.08, 'bandpass', 2); },
   skitter(){ noiseHit(0.05, 2800, 0.1, 'bandpass', 3); setTimeout(()=>noiseHit(0.05, 3200, 0.08, 'bandpass', 3), 90); },
   win(){ [440,554,659,880].forEach((f,i)=> setTimeout(()=>tone(f,f,0.5,0.12,'triangle'), i*180)); },
 };
@@ -8427,6 +8460,9 @@ function killEnemy(e, byPlayer=true){
   enemies.splice(enemies.indexOf(e), 1);
   sfx.kill();
   if (byPlayer) hitmark(true);
+  // the tide's final kill lands in slow motion
+  if (G.mode === 'active' && !G.spawnQueue.length && enemies.length === 0 && !boss)
+    slowmoT = 0.9;
 }
 // the bloater goes up in a caustic blast — on death or on reaching its target
 function bloaterBoom(e){
@@ -8853,6 +8889,8 @@ function killBoss(){
   $('bossBox').classList.add('hidden');
   enemyGroup.remove(boss.g);
   boss = null;
+  if (G.mode === 'active' && !G.spawnQueue.length && enemies.length === 0)
+    slowmoT = 1.2; // the Leviathan's fall deserves a longer beat
 }
 function updateBoss(dt, t){
   // boss tides stain the sky blood-red
@@ -9123,6 +9161,26 @@ function damageBeacon(d, from){
   if (BEACON.hp <= 0){ BEACON.hp = 0; gameOver('beacon'); }
 }
 
+// ---------------- beacon overcharge ----------------
+function fireOvercharge(){
+  if (OC.cd > 0 || G.paused || G.mode === 'menu' || G.mode === 'over' || G.mode === 'dawn') return;
+  OC.cd = OC.max;
+  OC.flashK = 1;
+  sfx.flare();
+  const fw = $('flashWhite');
+  fw.style.transition = 'none'; fw.style.opacity = 0.9;
+  void fw.offsetWidth;
+  fw.style.transition = 'opacity 1.1s ease-out'; fw.style.opacity = 0;
+  impactFlash(BEACON_POS.clone().add(new THREE.Vector3(0, 7, 0)), 0xffe9a8, 10, 0.7);
+  for (let i=enemies.length-1;i>=0;i--){
+    const e = enemies[i];
+    e.ignite = 3;
+    damageEnemy(e, 20, e.group.position.clone().add(new THREE.Vector3(0, 0.6, 0)));
+  }
+  if (boss) damageBoss(120, boss.head.position.clone(), false);
+  shake(0.4, 0.035);
+}
+
 // ---------------- tides (waves) ----------------
 // introductions: t1 snapper+lurker, t3 spitter, t5 brute, t7 bloater, t9 shrieker
 function tideComposition(t){
@@ -9242,7 +9300,7 @@ function updateTides(dt){
         for (let i=0;i<burstN && G.spawnQueue.length && enemies.length < 38;i++)
           spawnEnemy(G.spawnQueue.pop());
       }
-    } else if (enemies.length === 0 && !boss){
+    } else if (enemies.length === 0 && !boss && slowmoT <= 0){
       if (G.tide >= 10 && !G.endless) startDawn();
       else startIntermission();
     }
@@ -9372,6 +9430,7 @@ addEventListener('keydown', e=>{
   keys[e.code] = true;
   if (e.code === 'KeyR') startReload();
   if (e.code === 'KeyG') throwNade();
+  if (e.code === 'KeyQ') fireOvercharge();
   if (e.code === 'KeyP' && !isTouch) togglePause();
   const dig = { Digit1:0, Numpad1:0, Digit2:1, Numpad2:1, Digit3:2, Numpad3:2 }[e.code];
   if (dig !== undefined) pickUpgrade(dig);
@@ -9475,6 +9534,11 @@ if (isTouch){
   $('btnFire').addEventListener('touchcancel', fireEnd, {passive:false});
   $('btnReload').addEventListener('touchstart', e=>{ tp(e); startReload(); }, {passive:false});
   $('btnNade').addEventListener('touchstart', e=>{ tp(e); throwNade(); }, {passive:false});
+  $('btnFlare').addEventListener('touchstart', e=>{ tp(e); fireOvercharge(); }, {passive:false});
+  $('btnMend').addEventListener('touchstart', e=>{ tp(e); mendHold = true; }, {passive:false});
+  const mendEnd = e=>{ tp(e); mendHold = false; };
+  $('btnMend').addEventListener('touchend', mendEnd, {passive:false});
+  $('btnMend').addEventListener('touchcancel', mendEnd, {passive:false});
   $('btnPause').addEventListener('touchstart', e=>{ tp(e); togglePause(); }, {passive:false});
 }
 
@@ -9596,8 +9660,26 @@ function updatePlayer(dt){
     P.shield = Math.min(P.shieldMax, P.shield + 16*dt);
 
   comboT -= dt; // kill-chain window
+
+  // mend the light: hold E (or MEND) at the tower base — weapon lowered, hands busy
+  const nearBeacon = Math.hypot(player.position.x, player.position.z) < 7.2;
+  P.repairing = nearBeacon && BEACON.hp < BEACON.hpMax && P.reloading <= 0 &&
+    (keys['KeyE'] || mendHold);
+  if (P.repairing){
+    P.firing = false;
+    BEACON.hp = Math.min(BEACON.hpMax, BEACON.hp + 6*dt);
+    repairFxT -= dt;
+    if (repairFxT <= 0){
+      repairFxT = 0.4;
+      sfx.clink();
+      const az = Math.atan2(player.position.x, player.position.z);
+      const hp = new THREE.Vector3(Math.sin(az)*4.2, terrainHeight(0,0) + rand(0.6, 1.8), Math.cos(az)*4.2);
+      impactFlash(hp, 0xffd88a, 0.7, 0.3);
+      burst(hp, 2, 0xffd88a, 0.05, 1.5, 0.8, 1.5);
+    }
+  }
 }
-let bobT = 0, adsK = 0, recoilK = 0, swayX = 0, swayY = 0, lastYaw = 0, lastPitch = 0;
+let bobT = 0, adsK = 0, recoilK = 0, swayX = 0, swayY = 0, lastYaw = 0, lastPitch = 0, repairK = 0;
 function updateCamera(dt){
   const dir = new THREE.Vector3(
     Math.sin(P.yaw)*Math.cos(P.pitch), Math.sin(P.pitch), Math.cos(P.yaw)*Math.cos(P.pitch));
@@ -9625,13 +9707,14 @@ function updateCamera(dt){
   // reload: rifle dips + rolls inward, magazine drops out and snaps back
   const rp = P.reloading > 0 ? 1 - P.reloading/P.reloadT : 0; // reload progress 0..1
   const rk = rp > 0 ? Math.sin(rp*Math.PI) : 0;            // smooth dip envelope
+  repairK = lerp(repairK, P.repairing ? 1 : 0, 1 - Math.exp(-10*dt)); // weapon lowered while mending
   magMesh.position.y = magBaseY - (rp > 0 ? 0.15*Math.sin(clamp(rp*1.5, 0, 1)*Math.PI) : 0);
   viewmodel.position.set(
     lerp(0.17, 0, adsK) + (swayX + bx)*(1-adsK*0.8),
-    lerp(-0.175, adsAlignY, adsK) + (swayY - by)*(1-adsK*0.8) - 0.04*rk,
+    lerp(-0.175, adsAlignY, adsK) + (swayY - by)*(1-adsK*0.8) - 0.04*rk - 0.14*repairK,
     lerp(-0.36, -0.4, adsK) + recoilK*0.06);
   viewmodel.rotation.set(
-    recoilK*0.09 + Math.sin(perfT*1.5)*0.004*(1-adsK) - 0.22*rk,
+    recoilK*0.09 + Math.sin(perfT*1.5)*0.004*(1-adsK) - 0.22*rk - 0.5*repairK,
     swayX*0.5, 0.28*rk);
   armsGrp.position.set(0, -0.16*adsK, 0.12*adsK); // arms tuck out of view while aiming
 }
@@ -9658,6 +9741,17 @@ function updateHUD(){
   setTxt(hud.nadeT, 'nades', String(P.nades));
   hud.ammoLine.classList.toggle('low', P.mag <= Math.max(3, Math.round(P.magMax*0.2)));
   if (boss) $('bossFill').style.width = clamp(boss.hp/boss.hpMax*100, 0, 100) + '%';
+  // overcharge cooldown ring
+  const fb = $('btnFlare');
+  const ready = OC.cd <= 0;
+  fb.style.background = 'conic-gradient(' + (ready ? '#ffd88a' : '#8a744088') + ' ' +
+    ((1 - OC.cd/OC.max)*100).toFixed(1) + '%, rgba(255,216,138,.12) 0)';
+  fb.classList.toggle('ready', ready && G.mode !== 'over');
+  // mend-the-light prompt
+  const canRepair = Math.hypot(player.position.x, player.position.z) < 7.2 &&
+    BEACON.hp < BEACON.hpMax && G.mode !== 'over';
+  if (isTouch) $('btnMend').style.display = canRepair ? 'flex' : 'none';
+  else $('repairHint').style.opacity = canRepair && !P.repairing ? 1 : 0;
   hud.lowhp.classList.toggle('on', P.hp <= 30 && G.mode !== 'over');
 }
 
@@ -9788,6 +9882,10 @@ function updateBeacon(dt, t){
     if (BEACON.alarmT <= 0){ BEACON.alarmT = 2; sfx.alarm(); }
     lampLight.intensity = 60 + Math.sin(t*8)*25;
   }
+  if (OC.flashK > 0){ // overcharge: the lamp goes supernova for a moment
+    OC.flashK = Math.max(0, OC.flashK - dt*1.3);
+    lampLight.intensity = 60 + OC.flashK*650;
+  }
 }
 
 // ---------------- resize ----------------
@@ -9814,7 +9912,9 @@ const clock = new THREE.Clock();
 window.__vt.ready = true;
 window.__vt.debug = { G, P, U, fire: v => { P.firing = v; }, offer: offerUpgrades,
   nade: throwNade, crate: spawnCrate, equip: equipWeapon,
-  spawn: spawnEnemy, enemies,
+  spawn: spawnEnemy, enemies, OC, BEACON, player, oc: fireOvercharge, slow: () => slowmoT,
+  killAll: () => { while (enemies.length) killEnemy(enemies[0], true); },
+  dmgBeacon: d => damageBeacon(d, new THREE.Vector3(5, 0, 5)),
   bossSpawn: spawnBoss, bossInfo: () => boss ? { hp: boss.hp, phase: boss.phase } : null,
   bossHit: d => boss && damageBoss(d, boss.head.position.clone(), false),
   die: () => gameOver('keeper'),
@@ -9824,32 +9924,36 @@ let perfT = 0;
 function frame(){
   requestAnimationFrame(frame);
   const dt = Math.min(clock.getDelta(), 0.05);
-  perfT += dt;
+  // tide-clear slow motion: the last kill of a tide lands in 0.3x time
+  const gdt = slowmoT > 0 ? dt*0.3 : dt;
+  if (slowmoT > 0) slowmoT -= dt;
+  perfT += gdt;
   const t = perfT;
 
   updateWater(t);
-  updateClouds(dt);
+  updateClouds(gdt);
   updateLightning(dt);
   updateMusic(dt);
-  updateBeacon(dt, t);
+  updateBeacon(gdt, t);
   updateAnnounce(dt);
 
   const running = !G.paused && G.mode !== 'menu' && G.mode !== 'over';
   if (running){
-    updatePlayer(dt);
-    updateEnemies(dt, t);
-    updateBoss(dt, t);
-    updateBeamDamage(dt);
-    updateSpits(dt);
-    updateNades(dt);
-    updateCrates(dt);
-    updatePickups(dt, t);
+    OC.cd = Math.max(0, OC.cd - dt);
+    updatePlayer(gdt);
+    updateEnemies(gdt, t);
+    updateBoss(gdt, t);
+    updateBeamDamage(gdt);
+    updateSpits(gdt);
+    updateNades(gdt);
+    updateCrates(gdt);
+    updatePickups(gdt, t);
     updateThreatAudio(dt);
-    updateTides(dt);
+    updateTides(gdt);
     if (G.mode === 'dawn') updateDawn(dt);
   }
   if (G.mode !== 'menu'){
-    updateCamera(dt);
+    updateCamera(gdt);
     updateHUD();
     updateMinimap(t);
     updateEnemyDirs();

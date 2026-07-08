@@ -23,6 +23,8 @@ Watch the minimap: white flashing dots are incoming voidspawn, and glowing eyes 
 | Left click | Fire |
 | Right click (hold) | Aim down sights |
 | `G` | Throw grenade |
+| `Q` | Beacon overcharge — blinding flare, ignites everything (60s cooldown) |
+| `E` (hold, at tower base) | Mend the light — repairs the beacon while your weapon is lowered |
 | `Shift` | Sprint |
 | `R` | Reload |
 | `1` / `2` / `3` | Pick an upgrade card between tides |
@@ -35,7 +37,8 @@ A **Settings** screen (from the menu or pause) has sensitivity, volume, invert-Y
 | Left thumb | Move (virtual joystick) — push to the edge to sprint |
 | Right thumb drag | Aim |
 | `FIRE` button | Hold to shoot — **drag on it to aim while firing** |
-| `RLD` / `NADE` buttons | Reload / throw grenade |
+| `RLD` / `NADE` / `FLARE` buttons | Reload / grenade / beacon overcharge |
+| `MEND` button (hold, appears at tower base) | Repair the beacon |
 | Tap a card | Pick an upgrade between tides |
 | `II` button | Pause |
 
