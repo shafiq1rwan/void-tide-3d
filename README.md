@@ -32,7 +32,7 @@ A **Settings** screen (from the menu or pause) has sensitivity, volume, invert-Y
 
 | Mobile (landscape) | |
 |---|---|
-| Left thumb | Move (virtual joystick) |
+| Left thumb | Move (virtual joystick) — push to the edge to sprint |
 | Right thumb drag | Aim |
 | `FIRE` button | Hold to shoot — **drag on it to aim while firing** |
 | `RLD` / `NADE` buttons | Reload / throw grenade |

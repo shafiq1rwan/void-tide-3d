@@ -251,7 +251,9 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
   #touchUI{ position:fixed; inset:0; z-index:12; pointer-events:none; display:none; }
   body.touch #touchUI{ display:block; }
   #joyBase{ position:absolute; width:110px; height:110px; border-radius:50%; border:1px solid rgba(125,249,255,.4);
-    background:rgba(125,249,255,.05); transform:translate(-50%,-50%); opacity:0; }
+    background:rgba(125,249,255,.05); transform:translate(-50%,-50%); opacity:0;
+    transition:border-color .15s, box-shadow .15s; }
+  #joyBase.sprint{ border-color:var(--cyan); box-shadow:0 0 16px rgba(125,249,255,.45); }
   #joyNub{ position:absolute; width:46px; height:46px; border-radius:50%; background:rgba(125,249,255,.35);
     border:1px solid rgba(125,249,255,.7); transform:translate(-50%,-50%); opacity:0; }
   .tbtn{ position:absolute; pointer-events:auto; border-radius:50%; border:1px solid rgba(125,249,255,.55);
@@ -438,7 +440,7 @@ window.addEventListener('unhandledrejection', function(e){ window.__vt.errors.pu
   <div class="howcol">
     <p><b>THE WATCH</b> &mdash; Creatures rise from the sea each tide and besiege the beacon at the island's heart. If the light goes dark &mdash; or you fall &mdash; the run ends. Survive 10 tides and dawn breaks.</p>
     <p class="deskonly"><b>CONTROLS</b> &mdash; WASD move &bull; mouse aim &bull; LMB fire &bull; RMB sights &bull; G grenade &bull; R reload &bull; SHIFT sprint &bull; 1/2/3 pick upgrades &bull; ESC pause</p>
-    <p class="touchonly"><b>CONTROLS</b> &mdash; Left thumb moves, right thumb aims. Hold FIRE and drag it to aim while shooting. RLD reloads, NADE throws a grenade, tap a card to pick an upgrade.</p>
+    <p class="touchonly"><b>CONTROLS</b> &mdash; Left thumb moves &mdash; push the stick to its edge to sprint (the ring glows). Right thumb aims. Hold FIRE and drag it to aim while shooting. RLD reloads, NADE throws a grenade, tap a card to pick an upgrade.</p>
     <p><b>THE LIGHT</b> &mdash; The beacon's sweeping beam sears creatures caught in it. Keep it alive; it fights beside you.</p>
     <p><b>SURVIVE</b> &mdash; Kills within 2 seconds chain up to x5 score. Red arcs show what hurt you; cyan chevrons point at threats you can't see; a skitter means something is right behind you. Grab glowing pickups, watch the shore for weapon crates, and pop bloaters from a distance.</p>
     <p><b>THE DEEP</b> &mdash; Every tenth tide the Leviathan rises. Its glowing maw is the only soft spot.</p>
@@ -9551,7 +9553,10 @@ function updatePlayer(dt){
   const len = Math.hypot(mx, mz);
   if (len > 1){ mx/=len; mz/=len; }
   P.moving = len > 0.1;
-  P.sprint = !!keys['ShiftLeft'] && !P.ads;
+  // sprint: Shift on desktop; on touch, push the stick to its outer edge
+  const joyMag = Math.hypot(joy.x, joy.y);
+  P.sprint = (!!keys['ShiftLeft'] || joyMag > 0.92) && !P.ads;
+  if (isTouch) $('joyBase').classList.toggle('sprint', P.sprint && joyMag > 0.92);
 
   const fwd = new THREE.Vector3(Math.sin(P.yaw), 0, Math.cos(P.yaw));
   const right = new THREE.Vector3(-Math.cos(P.yaw), 0, Math.sin(P.yaw));
